@@ -1,0 +1,21 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+check_var() {
+    if [ -z "${!1}" ]; then
+        echo "Error: No ${2} has been specified in the '${1}' variable. ${3}"
+        echo "For more information, see the README: https://github.com/martabal/docker-immich#variables"
+        sleep infinity
+    fi
+}
+
+if [ -z "${DB_URL}" ]; then
+#         Variable           Variable Summary                Additional Message
+check_var "DB_HOSTNAME"      "PostgreSQL database host"
+check_var "DB_USERNAME"      "PostgreSQL database user"
+check_var "DB_PASSWORD"      "PostgreSQL database password"
+check_var "DB_DATABASE_NAME" "PostgreSQL database name"
+fi
+if [ -z "${REDIS_SOCKET}" ] && [ -z "${REDIS_URL}" ]; then
+check_var "REDIS_HOSTNAME"   "Redis host"
+fi

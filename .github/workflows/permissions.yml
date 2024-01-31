@@ -1,0 +1,25 @@
+name: Permission check
+on:
+  pull_request_target:
+    paths:
+      - '**/run'
+      - '**/finish'
+      - '**/check'
+jobs:
+  permission_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Check Permissions
+        run: |
+          WRONG_PERM=$(find ./  -path "./.git" -prune -o \( -name "run" -o -name "finish" -o -name "check" \) -not -perm -u=x,g=x,o=x -print)
+          if [ -n "${WRONG_PERM}" ]; then
+            for i in ${WRONG_PERM}; do
+              echo "::error file=${i},line=1,title=Missing Executable Bit::This file needs to be set as executable!"
+            done
+            exit 1
+          else
+            echo "**** All perms look good ****"
+          fi

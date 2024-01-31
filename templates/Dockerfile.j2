@@ -1,0 +1,352 @@
+# syntax=docker/dockerfile:1
+
+FROM ghcr.io/imagegenius/baseimage-ubuntu:{% if cpu_architecture == "amd64" %}mantic{% else %}arm64v8-mantic{% endif %}
+
+# set version label
+ARG BUILD_DATE
+ARG VERSION
+ARG IMMICH_VERSION
+LABEL build_version="Immich AIO Version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+LABEL maintainer="martabal"
+
+# environment settings
+ENV \
+  IMMICH_MEDIA_LOCATION="/photos" \
+  {% if machine_learning == True -%}
+  IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
+  MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
+  TRANSFORMERS_CACHE="/config/machine-learning" \
+  {% if gpu_acceleration_name == "cuda" -%}
+  MACHINE_LEARNING_GPU_ACCELERATION="cuda" \
+  {% elif gpu_acceleration_name == "openvino" -%}
+  MACHINE_LEARNING_GPU_ACCELERATION="openvino" \
+  {% endif -%}
+  {% else -%}
+  IMMICH_MACHINE_LEARNING_ENABLED="false" \
+  {% endif -%}
+  SERVER_PORT="8080" \
+  {% if cpu_architecture == "amd64" -%}
+  NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
+  {% endif -%}
+  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
+  IMMICH_WEB_ROOT="/app/immich/server/www"
+  
+# run build
+RUN \
+  echo "**** install build packages ****" && \
+  echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
+  curl -s https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
+  apt-get update && \
+  apt-get install --no-install-recommends -y \
+    autoconf \
+    bc \
+    build-essential \
+    cpanminus \
+    git \
+    libany-uri-escape-perl \
+    libcapture-tiny-perl \
+    libexif-dev \
+    libexpat1-dev \
+    libffi-checklib-perl \
+    libfile-chdir-perl \
+    libfile-slurper-perl \
+    libfile-which-perl \
+    libglib2.0-dev \
+    libgsf-1-dev \
+    libheif-dev \
+    libio-socket-ssl-perl \
+    libjpeg-dev \
+    libjxl-dev \
+    libltdl-dev \
+    libmojolicious-perl \
+    libnet-ssleay-perl \
+    liborc-0.4-dev \
+    libpath-tiny-perl \
+    libpkgconfig-perl \
+    librsvg2-dev \
+    libsort-versions-perl \
+    libspng-dev \
+    libterm-table-perl \
+    libtest-fatal-perl \
+    libtest-needs-perl \
+    libtest-warnings-perl \
+    libtest2-suite-perl \
+    libtool \
+    libtry-tiny-perl \
+    libwebp-dev \
+    meson \
+    pkg-config \
+    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    python3-dev \
+    {% endif -%}
+    unzip \
+    wget && \
+  echo "**** install runtime packages ****" && \
+  apt-get install --no-install-recommends -y \
+    {% if cpu_architecture == "amd64" -%}
+    intel-media-va-driver-non-free \
+    {% endif -%}
+    {% if machine_learning == True and gpu_acceleration_name == "cuda" -%}
+    libcublas12 \
+    libcublaslt12 \
+    libcudart12 \
+    libcufft11 \
+    libcurand10 \
+    {% endif -%}
+    libexif12 \
+    libexpat1 \
+    libgcc-s1 \
+    libglib2.0-0 \
+    libgomp1 \
+    libgsf-1-114 \
+    libheif1 \
+    libjxl0.7 \
+    liblcms2-2 \
+    liblqr-1-0 \
+    libltdl7 \
+    libmimalloc2.0 \
+    libopenexr-3-1-30 \
+    libopenjp2-7 \
+    liborc-0.4-0 \
+    libpng16-16 \
+    librsvg2-2 \
+    libspng0 \
+    libwebp7 \
+    libwebpdemux2 \
+    libwebpmux3 \
+    mesa-va-drivers \
+    nodejs \
+    perl \
+    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    python3 \
+    python3-pip \
+    python3-venv \
+    {% endif -%}
+    zlib1g && \
+  {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+  echo "**** install dev-dependencies for python 3.10 ****" && \
+  apt-get install --no-install-recommends -y \
+    libbz2-dev \
+    libc6-dev \
+    libffi-dev \
+    libgdbm-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    zlib1g-dev && \
+  echo "**** compile python 3.10 ****" && \
+  mkdir -p /tmp/python && \
+  cd /tmp/python && \
+  curl -o \
+    /tmp/python/Python-3.10.13.tar.xz -L \
+    "https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tar.xz" && \
+  tar xf /tmp/python/Python-3.10.13.tar.xz && \
+  cd /tmp/python/Python-3.10.13 && \
+  ./configure --with-ensurepip=install --enable-optimizations && \
+  make altinstall && \
+  {% endif -%}
+  echo "**** create folders ****" && \
+  mkdir -p \
+    /app/immich/geodata \
+    {% if machine_learning == True  -%}
+    /app/immich/machine-learning/ann \
+    {% endif -%}
+    /app/immich/server \
+    /app/immich/server/www \
+    /tmp/sharp \
+    /tmp/immich-dependencies \
+    /tmp/immich && \
+  echo "**** download immich dependencies ****" && \
+  curl -o \
+    /tmp/immich-dependencies.tar.gz -L \
+    "https://github.com/immich-app/base-images/archive/main.tar.gz" && \
+  tar xf \
+    /tmp/immich-dependencies.tar.gz -C \
+    /tmp/immich-dependencies --strip-components=1 && \
+  echo "**** build immich dependencies ****" && \
+  cd /tmp/immich-dependencies/server/bin && \
+  ./install-ffmpeg.sh && \
+  ./build-libraw.sh && \
+  ./build-imagemagick.sh && \
+  ./build-libvips.sh && \
+  ./build-perllib-compress-brotli.sh && \
+  echo "**** download geocoding data ****" && \
+  curl -o \
+    /tmp/cities500.zip -L \
+    "https://download.geonames.org/export/dump/cities500.zip" && \
+  curl -o \
+    /app/immich/geodata/admin1CodesASCII.txt -L \
+    "https://download.geonames.org/export/dump/admin1CodesASCII.txt" && \
+  curl -o \
+    /app/immich/geodata/admin2Codes.txt -L \
+    "https://download.geonames.org/export/dump/admin2Codes.txt" && \
+  unzip \
+    /tmp/cities500.zip -d \
+    /app/immich/geodata && \
+  date --iso-8601=seconds | tr -d "\n" > /app/immich/geodata/geodata-date.txt && \
+  echo "**** download immich ****" && \
+  if [ -z ${IMMICH_VERSION} ]; then \
+    IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
+      jq -r '.tag_name'); \
+  fi && \
+  curl -o \
+    /tmp/immich.tar.gz -L \
+    "https://github.com/immich-app/immich/archive/${IMMICH_VERSION}.tar.gz" && \
+  tar xf \
+    /tmp/immich.tar.gz -C \
+    /tmp/immich --strip-components=1 && \
+  echo "**** build server ****" && \
+  cd /tmp/immich/server && \
+  npm ci && \
+  rm -rf node_modules/@img/sharp-libvips* && \
+  rm -rf node_modules/@img/sharp-linuxmusl-x64 && \
+  cp -r \
+    node_modules/@img \
+    /tmp/sharp && \
+  npm run build && \
+  npm prune --omit=dev --omit=optional && \
+  cp -r \
+    /tmp/sharp/@img \
+    node_modules && \
+  npm link && \
+  npm cache clean --force && \
+  cp -a \
+    resources \
+    package.json \
+    package-lock.json \
+    node_modules \
+    dist \
+    /app/immich/server && \
+  echo "**** build open-api ****" && \
+  cd /tmp/immich/open-api/typescript-sdk && \
+  npm ci && \
+  npm run build && \
+  echo "**** build web ****" && \
+  cd /tmp/immich/web && \
+  npm ci && \
+  npm run build && \
+  cp -a \
+    build/* \
+    static \
+    /app/immich/server/www  && \
+  {% if machine_learning == True -%}
+  echo "**** build machine-learning ****" && \
+  cd /tmp/immich/machine-learning && \
+  {% if gpu_acceleration_name == "openvino" -%}
+  python3.10 -m pip install -U --no-cache-dir \
+    openvino==2023.1.0 \
+    poetry \
+    virtualenv && \
+  python3.10 -m venv /lsiopy && \
+  {% else -%}
+  pip install --break-system-packages -U --no-cache-dir \
+    poetry && \
+  python3 -m venv /lsiopy && \
+  {% endif -%}
+  poetry config installer.max-workers 10 && \
+  poetry config virtualenvs.create false && \
+  cp -a \
+    pyproject.toml \
+    poetry.lock \
+    app \
+    log_conf.json \
+    /app/immich/machine-learning && \
+  cp -a \
+    ann/ann.py \
+    /app/immich/machine-learning/ann && \
+  {% if gpu_acceleration_name == "cuda" -%}
+  echo "**** change machine learning dependencies for cuda acceleration ****" && \
+  curl -o "/tmp/libcudnn8.deb" -L \
+    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
+  dpkg -i "/tmp/libcudnn8.deb" && \
+  cd /app/immich/machine-learning && \
+  poetry source add --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/ && \
+  poetry add --source ort --group cuda ort-nightly-gpu && \
+  poetry remove --group cuda onnxruntime-gpu && \
+  {% endif -%}
+  poetry install --sync --no-interaction --no-ansi --no-root --with {% if gpu_acceleration_name == "cuda" %}cuda{% elif gpu_acceleration_name == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
+  {% endif -%}
+  echo "**** install immich cli (immich upload) ****" && \
+  npm install -g --prefix /tmp/cli @immich/cli && \
+  mv /tmp/cli/lib/node_modules/@immich/cli /app/cli && \
+  echo "**** cleanup ****" && \
+  {% if machine_learning == True -%}
+  for cleanfiles in *.pyc *.pyo; do \
+    find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
+  done && \
+  {% endif -%}
+  apt-get remove -y --purge \
+    {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+    libbz2-dev \
+    libc6-dev \
+    libffi-dev \
+    libgdbm-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    zlib1g-dev \
+    {% endif -%}
+    autoconf \
+    bc \
+    build-essential \
+    cpanminus \
+    git \
+    libany-uri-escape-perl \
+    libcapture-tiny-perl \
+    libexif-dev \
+    libexpat1-dev \
+    libffi-checklib-perl \
+    libfile-chdir-perl \
+    libfile-slurper-perl \
+    libfile-which-perl \
+    libglib2.0-dev \
+    libgsf-1-dev \
+    libheif-dev \
+    libio-socket-ssl-perl \
+    libjpeg-dev \
+    libjxl-dev \
+    libltdl-dev \
+    libmojolicious-perl \
+    libnet-ssleay-perl \
+    liborc-0.4-dev \
+    libpath-tiny-perl \
+    libpkgconfig-perl \
+    librsvg2-dev \
+    libsort-versions-perl \
+    libspng-dev \
+    libterm-table-perl \
+    libtest-fatal-perl \
+    libtest-needs-perl \
+    libtest-warnings-perl \
+    libtest2-suite-perl \
+    libtool \
+    libtry-tiny-perl \
+    libwebp-dev \
+    meson \
+    pkg-config \
+    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    python3-dev \
+    {% endif -%}
+    unzip \
+    wget && \
+  apt-get autoremove -y --purge && \
+  apt-get clean && \
+  rm -rf \
+    /etc/apt/sources.list.d/node.list \
+    /root/.cache \
+    /root/.cpanm \
+    /root/.npm \
+    /tmp/* \
+    /usr/share/keyrings/nodesource.gpg \
+    /var/tmp/* \
+    /var/lib/apt/lists/*
+
+# copy local files
+COPY root/ /
+
+# environment settings
+ENV NODE_ENV="production"
+
+# ports and volumes
+EXPOSE 8080
+VOLUME /config /import
