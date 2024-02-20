@@ -47,15 +47,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create templates
+      - name: Create Dockerfile from template
         run: python3 render_templates.py
 
-      - name: Docker meta
-        id: meta
+      - name: Generate docker image tags
+        id: metadata
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+            ghcr.io/${{ github.repository_owner }}/immich
           tags: |
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
             type=ref,event=branch
@@ -82,3 +82,6 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/${{ matrix.file }}
           platforms: ${{ matrix.platforms }}
+          push: ${{ github.event_name == 'workflow_dispatch' }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
