@@ -266,9 +266,6 @@ RUN \
   {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if gpu_acceleration_name == "cuda" %}cuda{% elif gpu_acceleration_name == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
-  echo "**** install immich cli (immich upload) ****" && \
-  npm install -g --prefix /tmp/cli @immich/cli && \
-  mv /tmp/cli/lib/node_modules/@immich/cli /app/cli && \
   echo "**** cleanup ****" && \
   {% if machine_learning == True -%}
   for cleanfiles in *.pyc *.pyo; do \
