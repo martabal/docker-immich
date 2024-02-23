@@ -26,9 +26,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install shell linter
-        run: sudo apt-get install shellcheck
-
       - name: Install python formatter and linter
         run: |
           python -m pip install --upgrade pip
@@ -40,5 +37,5 @@ jobs:
       - name: Run formatter
         run: black --check **.py
 
-      - name: Run shell linter
-        run: find . -type f -name "run" -exec shellcheck {} +
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
