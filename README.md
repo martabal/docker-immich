@@ -139,7 +139,7 @@ services:
     container_name: redis
 # PostgreSQL 14:
   postgres14:
-    image: tensorchord/pgvecto-rs:pg14-v0.1.11
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
     ports:
       - 5432:5432
     container_name: postgres14
@@ -191,7 +191,7 @@ docker run -d \
   -e POSTGRES_DB=immich \
   -v path_to_postgres:/var/lib/postgresql/data \
   -p 5432:5432 \
-  tensorchord/pgvecto-rs:pg14-v0.1.11
+  tensorchord/pgvecto-rs:pg14-v0.2.0
 
 ```
 
