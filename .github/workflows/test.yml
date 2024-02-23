@@ -1,4 +1,4 @@
-name: lint and format
+name: Run tests
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   lint-and-format:
-    name: linter and formatter
+    name: tests
     runs-on: ubuntu-latest
 
     steps:

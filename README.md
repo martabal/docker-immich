@@ -1,5 +1,8 @@
 # [martabal/immich](https://github.com/martabal/docker-immich)
 
+[![Docker build](https://github.com/martabal/docker-immich/actions/workflows/docker.yml/badge.svg)](https://github.com/martabal/docker-immich/actions/workflows/docker.yml)
+[![Run tests](https://github.com/martabal/docker-immich/actions/workflows/test.yml/badge.svg)](https://github.com/martabal/docker-immich/actions/workflows/test.yml)
+
 [Immich](https://immich.app/) is a high performance self-hosted photo and video backup solution.
 
 [![immich](https://user-images.githubusercontent.com/27055614/182044984-2ee6d1ed-c4a7-4331-8a4b-64fcde77fe1f.png)](https://immich.app/)
