@@ -26,12 +26,6 @@ flavors = [
                 "render_name": False,
                 "cpu_architecture": "amd64",
             },
-            {
-                "name": "aarch64",
-                "machine_learning_provider": "cpu",
-                "render_name": True,
-                "cpu_architecture": "aarch64",
-            },
         ],
         "name": "main",
         "machine_learning": True,
@@ -43,12 +37,6 @@ flavors = [
                 "machine_learning_provider": None,
                 "render_name": False,
                 "cpu_architecture": "amd64",
-            },
-            {
-                "name": "aarch64",
-                "machine_learning_provider": None,
-                "render_name": True,
-                "cpu_architecture": "aarch64",
             },
         ],
         "name": "noml",
@@ -72,7 +60,6 @@ for i, flavor in enumerate(flavors):
     for type in flavor["types"]:
         variables = {
             "gpu_acceleration_name": type["machine_learning_provider"],
-            "cpu_architecture": type["cpu_architecture"],
             "machine_learning": flavor["machine_learning"],
         }
         dockerfile_rendered_template = dockerfile_template.render(variables)

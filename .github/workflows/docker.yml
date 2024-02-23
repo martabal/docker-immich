@@ -35,13 +35,7 @@ jobs:
           - image: classic
             context: build-main
             file: Dockerfile
-            platforms: linux/amd64
-
-          - image: arm
-            context: build-main
-            file: Dockerfile.aarch64
-            platforms: linux/arm64
-            suffix: -aarch64
+            platforms: linux/amd64,linux/arm64
 
     steps:
       - name: Checkout code
