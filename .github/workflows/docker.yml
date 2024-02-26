@@ -52,7 +52,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/immich
           tags: |
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
-            type=ref,event=branch
+            type=ref,event=branch,enable=${{ github.event_name != 'workflow_dispatch' }}
             type=ref,event=pr
             type=ref,event=tag
             type=raw,value=${{ inputs.tags }},enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
