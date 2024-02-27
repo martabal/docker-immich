@@ -4,18 +4,14 @@ FROM ghcr.io/imagegenius/baseimage-ubuntu:mantic
 
 # set version label
 ARG BUILD_DATE
-ARG VERSION
 ARG IMMICH_VERSION
-LABEL build_version="Immich AIO Version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
 # environment settings
 ENV \
-  IMMICH_MEDIA_LOCATION="/photos" \
   {% if machine_learning == True -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
-  TRANSFORMERS_CACHE="/config/machine-learning" \
   {% if gpu_acceleration_name == "cuda" -%}
   MACHINE_LEARNING_GPU_ACCELERATION="cuda" \
   {% elif gpu_acceleration_name == "openvino" -%}
@@ -24,12 +20,14 @@ ENV \
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
-  SERVER_PORT="8080" \
   {% if cpu_architecture == "amd64" -%}
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
+  TRANSFORMERS_CACHE="/config/machine-learning" \
   {% endif -%}
+  IMMICH_MEDIA_LOCATION="/photos" \
   IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
-  IMMICH_WEB_ROOT="/app/immich/server/www"
+  IMMICH_WEB_ROOT="/app/immich/server/www" \
+  SERVER_PORT="8080"
   
 # run build
 RUN \
@@ -260,9 +258,9 @@ RUN \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
   dpkg -i "/tmp/libcudnn8.deb" && \
   cd /app/immich/machine-learning && \
-  poetry source add --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/ && \
-  poetry add --source ort --group cuda ort-nightly-gpu && \
-  poetry remove --group cuda onnxruntime-gpu && \
+  poetry source add --no-interaction --no-ansi --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple/ && \
+  poetry add --lock --no-interaction --no-ansi --source ort --group cuda ort-nightly-gpu && \
+  poetry remove --lock --no-interaction --no-ansi --group cuda onnxruntime-gpu && \
   {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if gpu_acceleration_name == "cuda" %}cuda{% elif gpu_acceleration_name == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
