@@ -1,10 +1,10 @@
 name: Permission check
 on:
-  pull_request_target:
-    paths:
-      - '**/run'
-      - '**/finish'
-      - '**/check'
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
 jobs:
   permission_check:
     runs-on: ubuntu-latest

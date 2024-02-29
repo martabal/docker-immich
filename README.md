@@ -35,7 +35,6 @@ This image offers different versions via tags. Be cautious when using unstable o
 | latest-openvino |     ✅     | Latest Immich release with an Ubuntu base and support for openvino.                                                                                      |
 |   latest-cuda   |     ✅     | Latest Immich release with an Ubuntu base and support for cuda.                                                                                          |
 |      noml       |     ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration.                |
-|     alpine      |     ✅     | Latest Immich release with an Alpine base. Machine-learning is completely removed, making it a very lightweight image (can have issues with RAW images). |
 
 ## Application Setup
 
