@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/imagegenius/baseimage-ubuntu:mantic
+FROM ghcr.io/martabal/baseimage-ubuntu:noble
 
 # set version label
 ARG BUILD_DATE
@@ -76,11 +76,13 @@ RUN \
     meson \
     pkg-config \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
-    python3-dev \
+    python3.11-dev \
     {% endif -%}
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
+  # until jellyfin-ffmpeg support noble
+    ffmpeg \
     {% if cpu_architecture == "amd64" -%}
     intel-media-va-driver-non-free \
     {% endif -%}
@@ -116,9 +118,9 @@ RUN \
     nodejs \
     perl \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
-    python3 \
+    python3.11 \
     python3-pip \
-    python3-venv \
+    python3.11-venv \
     {% endif -%}
     zlib1g && \
   {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
@@ -146,7 +148,7 @@ RUN \
   echo "**** create folders ****" && \
   mkdir -p \
     /app/immich/geodata \
-    {% if machine_learning == True  -%}
+    {% if machine_learning == True -%}
     /app/immich/machine-learning/ann \
     {% endif -%}
     /app/immich/server \
@@ -163,14 +165,14 @@ RUN \
     /tmp/immich-dependencies --strip-components=1 && \
   echo "**** build immich dependencies ****" && \
   cd /tmp/immich-dependencies/server/bin && \
-  FFMPEG_LOCK=$(jq -c '.packages[] | select(.name == "ffmpeg")' /tmp/immich-dependencies/server/bin/build-lock.json) && \
-  FFMPEG_VERSION=${FFMPEG_VERSION:=$(echo $FFMPEG_LOCK | jq -r '.version')} && \
-  TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
-  curl -o \
-    /tmp/ffmpeg.deb -L \
-    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
-  apt-get install --no-install-recommends -y -f \
-    /tmp/ffmpeg.deb && \
+  # FFMPEG_LOCK=$(jq -c '.packages[] | select(.name == "ffmpeg")' /tmp/immich-dependencies/server/bin/build-lock.json) && \
+  # FFMPEG_VERSION=${FFMPEG_VERSION:=$(echo $FFMPEG_LOCK | jq -r '.version')} && \
+  # TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
+  # curl -o \
+  #   /tmp/ffmpeg.deb -L \
+  #   "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
+  # apt-get install --no-install-recommends -y -f \
+  #   /tmp/ffmpeg.deb && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
@@ -233,7 +235,7 @@ RUN \
   cp -a \
     build/* \
     static \
-    /app/immich/server/www  && \
+    /app/immich/server/www && \
   {% if machine_learning == True -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
@@ -246,7 +248,7 @@ RUN \
   {% else -%}
   pip install --break-system-packages -U --no-cache-dir \
     poetry && \
-  python3 -m venv /lsiopy && \
+  python3.11 -m venv /lsiopy && \
   {% endif -%}
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
@@ -273,6 +275,13 @@ RUN \
   {% endif -%}
   echo "**** cleanup ****" && \
   {% if machine_learning == True -%}
+  {% if gpu_acceleration_name == "openvino" -%}
+  python3.10 -m pip uninstall -y --break-system-packages \
+    poetry && \
+  {% else -%}
+  pip uninstall -y --break-system-packages \
+    poetry && \
+  {% endif -%}
   for cleanfiles in *.pyc *.pyo; do \
     find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
   done && \
@@ -327,7 +336,8 @@ RUN \
     meson \
     pkg-config \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
-    python3-dev \
+    python3.11-dev \
+    python3-pip \
     {% endif -%}
     unzip && \
   apt-get autoremove -y --purge && \
