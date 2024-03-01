@@ -50,7 +50,7 @@ jobs:
       - name: Set tags
         id: tags
         run: |
-          echo "build_date=$(date +'%Y-%m-%dT%H:%M:%S%:z')" >> $GITHUB_ENV
+          echo "build_date=$(date +'%Y-%m-%dT%H:%M:%S%:z')" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
         run: python3 render_templates.py
@@ -92,4 +92,5 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
           build-args: |
+            BUILD_VERSION=${{ steps.tags.outputs.build_date }}
             IMMICH_VERSION=${{ inputs.version }}

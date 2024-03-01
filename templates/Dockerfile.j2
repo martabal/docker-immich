@@ -5,6 +5,7 @@ FROM ghcr.io/imagegenius/baseimage-ubuntu:mantic
 # set version label
 ARG BUILD_DATE
 ARG IMMICH_VERSION
+LABEL build_version="Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
 # environment settings
@@ -77,8 +78,7 @@ RUN \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
     python3-dev \
     {% endif -%}
-    unzip \
-    wget && \
+    unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     {% if cpu_architecture == "amd64" -%}
@@ -163,7 +163,14 @@ RUN \
     /tmp/immich-dependencies --strip-components=1 && \
   echo "**** build immich dependencies ****" && \
   cd /tmp/immich-dependencies/server/bin && \
-  ./install-ffmpeg.sh && \
+  FFMPEG_LOCK=$(jq -c '.packages[] | select(.name == "ffmpeg")' /tmp/immich-dependencies/server/bin/build-lock.json) && \
+  FFMPEG_VERSION=${FFMPEG_VERSION:=$(echo $FFMPEG_LOCK | jq -r '.version')} && \
+  TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
+  curl -o \
+    /tmp/ffmpeg.deb -L \
+    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
+  apt-get install --no-install-recommends -y -f \
+    /tmp/ffmpeg.deb && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
@@ -322,8 +329,7 @@ RUN \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
     python3-dev \
     {% endif -%}
-    unzip \
-    wget && \
+    unzip && \
   apt-get autoremove -y --purge && \
   apt-get clean && \
   rm -rf \
