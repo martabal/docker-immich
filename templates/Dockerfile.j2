@@ -273,6 +273,13 @@ RUN \
   {% endif -%}
   echo "**** cleanup ****" && \
   {% if machine_learning == True -%}
+  {% if gpu_acceleration_name == "openvino" -%}
+  python3.10 -m pip uninstall -y --break-system-packages \
+    poetry && \
+  {% else -%}
+  pip uninstall -y --break-system-packages \
+    poetry && \
+  {% endif -%}
   for cleanfiles in *.pyc *.pyo; do \
     find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
   done && \
