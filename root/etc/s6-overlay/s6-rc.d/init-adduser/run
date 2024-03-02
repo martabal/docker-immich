@@ -1,0 +1,30 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+usermod -o -u "${PUID:-911}" abc &>/dev/null
+groupmod -o -g "${PGID:-911}" abc &>/dev/null
+
+echo "
+╔═══════════════════════════════╗                               
+               _       _       _ 
+ _____ ___ ___| |_ ___| |_ ___| |
+|     | .'|  _|  _| .'| . | .'| |
+|_|_|_|__,|_| |_| |__,|___|__,|_|                                             
+
+  Baseimage from linuxserver.io"
+
+if [[ -f /donate.txt ]]; then
+  echo "╠═══════════════════════════════╣
+  To support this applications developer(s) visit:
+  $(cat /donate.txt)"
+fi
+
+echo "╠═══════════════════════════════╣
+  User/Group ID:
+  User UID: $(id -u abc)
+  User GID: $(id -g abc)"
+
+echo '╚═══════════════════════════════╝'
+
+lsiown abc:abc \
+  /defaults
