@@ -171,6 +171,9 @@ RUN \
     "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
   apt-get install --no-install-recommends -y -f \
     /tmp/ffmpeg.deb && \
+  ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
+  ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
+  ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
@@ -273,13 +276,6 @@ RUN \
   {% endif -%}
   echo "**** cleanup ****" && \
   {% if machine_learning == True -%}
-  {% if gpu_acceleration_name == "openvino" -%}
-  python3.10 -m pip uninstall -y --break-system-packages \
-    poetry && \
-  {% else -%}
-  pip uninstall -y --break-system-packages \
-    poetry && \
-  {% endif -%}
   for cleanfiles in *.pyc *.pyo; do \
     find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
   done && \
@@ -335,6 +331,7 @@ RUN \
     pkg-config \
     {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
     python3-dev \
+    python3-pip \
     {% endif -%}
     unzip && \
   apt-get autoremove -y --purge && \
