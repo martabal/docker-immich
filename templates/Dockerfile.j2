@@ -233,7 +233,7 @@ RUN \
   cp -a \
     build/* \
     static \
-    /app/immich/server/www  && \
+    /app/immich/server/www && \
   {% if machine_learning == True -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
@@ -262,7 +262,7 @@ RUN \
   {% if gpu_acceleration_name == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \
-    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.2.26-1+cuda12.1_amd64.deb" && \
+    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
   dpkg -i "/tmp/libcudnn8.deb" && \
   cd /app/immich/machine-learning && \
   poetry source add --no-interaction --no-ansi --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ && \
