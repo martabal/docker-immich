@@ -14,5 +14,4 @@ find /photos -maxdepth 0 \( ! -user abc -o ! -group abc \) -exec lsiown -R abc:a
 find /app/immich -path "*/node_modules" -prune -o -exec chown abc:abc {} +
 lsiown -R abc:abc \
     /config \
-    /run/immich \
-    /usr/src/resources
+    /run/immich
