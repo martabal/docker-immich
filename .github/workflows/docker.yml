@@ -65,7 +65,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
             type=ref,event=branch,enable=${{ github.event_name != 'workflow_dispatch' }}
             type=ref,event=pr
-            type=ref,event=tag
+            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' }}
             type=raw,value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
 
       - name: Set up QEMU
