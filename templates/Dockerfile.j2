@@ -345,6 +345,7 @@ RUN \
     /etc/apt/sources.list.d/node.list \
     {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
     /etc/apt/sources.list.d/openvino.list \
+    /usr/share/keyrings/intel-graphics.gpg \
     {% endif -%}
     /root/.cache \
     /root/.cpanm \
