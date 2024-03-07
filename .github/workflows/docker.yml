@@ -50,6 +50,7 @@ jobs:
       - name: Set tags
         id: tags
         run: |
+          echo "Generate tags"
           if [ "${{ inputs.version }}" != '' ]; then
             echo "immich_version=${{ inputs.version }}" >> $GITHUB_OUTPUT
           else
