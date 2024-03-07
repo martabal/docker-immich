@@ -13,11 +13,6 @@ ENV \
   {% if machine_learning == True -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
-  {% if gpu_acceleration_name == "cuda" -%}
-  MACHINE_LEARNING_GPU_ACCELERATION="cuda" \
-  {% elif gpu_acceleration_name == "openvino" -%}
-  MACHINE_LEARNING_GPU_ACCELERATION="openvino" \
-  {% endif -%}
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
@@ -35,6 +30,10 @@ RUN \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
+  {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy/lts/2350 unified" >>/etc/apt/sources.list.d/openvino.list && \
+  curl -s https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor | tee /usr/share/keyrings/intel-graphics.gpg >/dev/null && \
+  {% endif -%}
   apt-get update && \
   apt-get install --no-install-recommends -y \
     autoconf \
@@ -124,6 +123,9 @@ RUN \
   {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
   echo "**** install dev-dependencies for python 3.10 ****" && \
   apt-get install --no-install-recommends -y \
+    intel-level-zero-gpu \
+    intel-opencl-icd \
+    level-zero \
     libbz2-dev \
     libc6-dev \
     libffi-dev \
@@ -131,6 +133,7 @@ RUN \
     libreadline-dev \
     libsqlite3-dev \
     libssl-dev \
+    ocl-icd-libopencl1 \
     zlib1g-dev && \
   echo "**** compile python 3.10 ****" && \
   mkdir -p /tmp/python && \
@@ -242,7 +245,6 @@ RUN \
   cd /tmp/immich/machine-learning && \
   {% if gpu_acceleration_name == "openvino" -%}
   python3.10 -m pip install -U --no-cache-dir \
-    openvino==2023.1.0 \
     poetry \
     virtualenv && \
   python3.10 -m venv /lsiopy && \
@@ -262,7 +264,9 @@ RUN \
   cp -a \
     ann/ann.py \
     /app/immich/machine-learning/ann && \
-  {% if gpu_acceleration_name == "cuda" -%}
+  {% if gpu_acceleration_name == "openvino" -%}
+  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.1.0 && \
+  {% elif gpu_acceleration_name == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
@@ -338,6 +342,9 @@ RUN \
   apt-get clean && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
+    {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+    /etc/apt/sources.list.d/openvino.list \
+    {% endif -%}
     /root/.cache \
     /root/.cpanm \
     /root/.npm \
