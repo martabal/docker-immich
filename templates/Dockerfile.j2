@@ -13,16 +13,14 @@ ENV \
   {% if machine_learning == True -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
+  TRANSFORMERS_CACHE="/config/machine-learning" \
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
-  {% endif -%}
-  {% if cpu_architecture == "amd64" -%}
-  NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
-  TRANSFORMERS_CACHE="/config/machine-learning" \
   {% endif -%}
   IMMICH_MEDIA_LOCATION="/photos" \
   IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
   IMMICH_WEB_ROOT="/app/immich/server/www" \
+  NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   SERVER_PORT="8080"
   
 # run build
@@ -36,6 +34,7 @@ RUN \
   {% endif -%}
   apt-get update && \
   apt-get install --no-install-recommends -y \
+    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
     autoconf \
     bc \
     build-essential \
