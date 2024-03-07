@@ -50,7 +50,15 @@ jobs:
       - name: Set tags
         id: tags
         run: |
+          if [ "${{ inputs.version }}" != '' ]; then
+            echo "immich_version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+            echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
+          fi
           echo "build_date=$(date +'%Y-%m-%dT%H:%M:%S%:z')" >> $GITHUB_OUTPUT
+          echo "short_date=$(date '+%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
         run: python3 render_templates.py
@@ -63,10 +71,10 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/immich
           tags: |
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
-            type=ref,event=branch,enable=${{ github.event_name != 'workflow_dispatch' }}
-            type=ref,event=pr
-            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' }}
-            type=raw,value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }},suffix=${{ matrix.suffix }}
+            type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}
+            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' && github.event_name != 'pull_request' }}
+            type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
+            type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -93,4 +101,4 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           build-args: |
             BUILD_VERSION=${{ steps.tags.outputs.build_date }}
-            IMMICH_VERSION=${{ inputs.version }}
+            IMMICH_VERSION=${{ steps.tags.outputs.immich_version }}
