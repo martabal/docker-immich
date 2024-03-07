@@ -29,12 +29,12 @@ This image supports the following architectures:
 
 This image offers different versions via tags. Be cautious when using unstable or development tags, and read their descriptions carefully.
 
-|       Tag       | Available | Description                                                                                                                                              |
-| :-------------: | :-------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|     latest      |     ✅     | Latest Immich release with an Ubuntu base.                                                                                                               |
-| latest-openvino |     ✅     | Latest Immich release with an Ubuntu base and support for openvino.                                                                                      |
-|   latest-cuda   |     ✅     | Latest Immich release with an Ubuntu base and support for cuda.                                                                                          |
-|      noml       |     ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration.                |
+|   Tag    | Available | Description                                                                                                                               |
+| :------: | :-------: | ----------------------------------------------------------------------------------------------------------------------------------------- |
+|  latest  |     ✅     | Latest Immich release with an Ubuntu base.                                                                                                |
+| openvino |     ✅     | Latest Immich release with an Ubuntu base and support for openvino.                                                                       |
+|   cuda   |     ✅     | Latest Immich release with an Ubuntu base and support for cuda.                                                                           |
+|   noml   |     ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration. |
 
 ## Application Setup
 
