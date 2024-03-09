@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - image: openvino
@@ -58,17 +59,18 @@ jobs:
         run: |
           echo "Generate tags"
           if [ "${{ inputs.version }}" != '' ]; then
-            echo "immich_version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            immich_version="${{ inputs.version }}"
           elif [ -n "${{ github.event.client_payload.message }}" ]; then
             immich_version="${{ github.event.client_payload.message }}"
-            echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
           else
             immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
-            echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
           fi
+          short_version="${immich_version#v}"
+          echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
           echo "build_date=$(date +'%Y-%m-%dT%H:%M:%S%:z')" >> $GITHUB_OUTPUT
           echo "short_date=$(date '+%Y%m%d')" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
         run: python3 render_templates.py
@@ -80,9 +82,12 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/immich
           tags: |
-            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}
+            type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}
+            type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}-${{ steps.tags.outputs.commit }}
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' && github.event_name != 'pull_request' }}
+            type=raw,value=${{ steps.tags.outputs.short_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
 
@@ -106,7 +111,7 @@ jobs:
           provenance: false # prevent unknown architecture
           file: ${{ matrix.context }}/${{ matrix.file }}
           platforms: ${{ matrix.platforms }}
-          push: ${{ github.event_name == 'workflow_dispatch' }}
+          push: true
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
           build-args: |
