@@ -24,31 +24,39 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
         include:
           - image: openvino
             context: build-main
             file: Dockerfile.openvino
-            platforms: linux/amd64
+            platform: linux/amd64
             suffix: -openvino
 
           - image: cuda
             context: build-main
             file: Dockerfile.cuda
-            platforms: linux/amd64
+            platform: linux/amd64
             suffix: -cuda
 
           - image: classic
             context: build-main
             file: Dockerfile
-            platforms: linux/amd64,linux/arm64
+            platform: linux/amd64,linux/arm64
 
           - image: noml
             context: build-noml
             file: Dockerfile
-            platforms: linux/amd64,linux/arm64
+            platform: linux/amd64,linux/arm64
             suffix: -noml
 
     steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -101,15 +109,58 @@ jobs:
           password: ${{ secrets.GH_TOKEN }}
 
       - name: Build and push docker images
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.context }}
           provenance: false # prevent unknown architecture
           file: ${{ matrix.context }}/${{ matrix.file }}
-          platforms: ${{ matrix.platforms }}
-          push: true
+          platforms: ${{ matrix.platform }}
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/immich,push-by-digest=true,name-canonical=true,push=true
           build-args: |
             BUILD_VERSION=${{ steps.tags.outputs.build_date }}
             IMMICH_VERSION=${{ steps.tags.outputs.immich_version }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build_docker
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf ghcr.io/${{ github.repository_owner }}/immich@sha256:%s ' *)
