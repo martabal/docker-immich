@@ -19,7 +19,7 @@ on:
 jobs:
   build_docker:
     name: build docker images
-    runs-on: ubuntu-latest
+    runs-on: macos-14
 
     strategy:
       fail-fast: false
@@ -88,10 +88,10 @@ jobs:
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
