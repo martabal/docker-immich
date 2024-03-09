@@ -34,7 +34,6 @@ RUN \
   {% endif -%}
   apt-get update && \
   apt-get install --no-install-recommends -y \
-    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
     autoconf \
     bc \
     build-essential \
@@ -79,11 +78,9 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-  # until jellyfin-ffmpeg supports noble
+    # until jellyfin-ffmpeg supports noble
     ffmpeg \
-    {% if cpu_architecture == "amd64" -%}
-    intel-media-va-driver-non-free \
-    {% endif -%}
+    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
     {% if machine_learning == True and gpu_acceleration_name == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
