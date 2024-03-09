@@ -150,9 +150,9 @@ RUN \
     {% endif -%}
     /app/immich/server \
     /app/immich/server/www \
-    /tmp/sharp \
     /tmp/immich-dependencies \
-    /tmp/immich && \
+    /tmp/immich \
+    /tmp/sharp && \
   echo "**** download immich dependencies ****" && \
   curl -o \
     /tmp/immich-dependencies.tar.gz -L \
@@ -162,8 +162,7 @@ RUN \
     /tmp/immich-dependencies --strip-components=1 && \
   echo "**** build immich dependencies ****" && \
   cd /tmp/immich-dependencies/server/bin && \
-  FFMPEG_LOCK=$(jq -c '.packages[] | select(.name == "ffmpeg")' /tmp/immich-dependencies/server/bin/build-lock.json) && \
-  FFMPEG_VERSION=${FFMPEG_VERSION:=$(echo $FFMPEG_LOCK | jq -r '.version')} && \
+  FFMPEG_VERSION=$(jq -cr '.packages[] | select(.name == "ffmpeg").version' /tmp/immich-dependencies/server/bin/build-lock.json) && \
   TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
   curl -o \
     /tmp/ffmpeg.deb -L \
