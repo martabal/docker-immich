@@ -19,11 +19,11 @@ To obtain the appropriate image for your architecture, simply pull `ghcr.io/mart
 
 This image supports the following architectures:
 
-| Architecture | Available | Tag                     |
-| :----------: | :-------: | ----------------------- |
-|    x86-64    |     ✅     | amd64-\<version tag\>   |
-|    arm64     |     ✅     | arm64v8-\<version tag\> |
-|    armhf     |     ❌     |                         |
+| Architecture | Available |
+| :----------: | :-------: |
+|    x86-64    |    ✅     |
+|    arm64     |    ✅     |
+|    armhf     |    ❌     |
 
 ## Version Tags
 
@@ -31,10 +31,10 @@ This image offers different versions via tags. Be cautious when using unstable o
 
 |   Tag    | Available | Description                                                                                                                               |
 | :------: | :-------: | ----------------------------------------------------------------------------------------------------------------------------------------- |
-|  latest  |     ✅     | Latest Immich release with an Ubuntu base.                                                                                                |
-| openvino |     ✅     | Latest Immich release with an Ubuntu base and support for openvino.                                                                       |
-|   cuda   |     ✅     | Latest Immich release with an Ubuntu base and support for cuda.                                                                           |
-|   noml   |     ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration. |
+|  latest  |    ✅     | Latest Immich release with an Ubuntu base.                                                                                                |
+| openvino |    ✅     | Latest Immich release with an Ubuntu base and support for openvino for machine-learning acceleration.                                     |
+|   cuda   |    ✅     | Latest Immich release with an Ubuntu base and support for cuda for machine-learning acceleration.                                         |
+|   noml   |    ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration. |
 
 ## Application Setup
 
@@ -44,26 +44,24 @@ To use Immich, you need to have PostgreSQL 14/15/16 server with [pgvecto.rs](htt
 
 To use a SSL connection to your PostgreSQL database, include a PostgreSQL URL in the `DB_URL` environment variable.
 
-## Hardware Acceleration
+## Hardware Acceleration for videos
 
-### Intel Hardware Acceleration
+### Intel - QSV/VAAPI
 
 To use Intel Quicksync hardware acceleration:
 
 1. Ensure your container has access to the `/dev/dri` video device.
 2. Add the device to your container by including the following option in your Docker run command:
 
-  ```bash
-  docker run --device=/dev/dri:/dev/dri ...
-  ```
+```bash
+docker run --device=/dev/dri:/dev/dri ...
+```
 
-### Nvidia Hardware Acceleration
+### Nvidia - NVENC/VAAPI
 
-#### Video transcoding
+To use Nvidia hardware acceleration:
 
-For Nvidia GPUs with Nvidia/CUDA hardware acceleration:
-
-1. First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](<https://github.com/NVIDIA/>  nvidia-docker).
+1. First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](<https://github.com/NVIDIA/> nvidia-docker).
 
 2. After installing `nvidia-docker2`, recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
 
@@ -79,21 +77,28 @@ docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all
 docker run --gpus=all ...
 ```
 
-#### Machine-learning acceleration
+### Machine-learning acceleration
 
-For Nvidia GPUs with Nvidia/CUDA hardware acceleration, use the same commands used for video transcoding
+#### Intel - OpenVINO
 
-For Intel GPUs with OpenVINO, add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'` in your Docker run command. Example:
+To use OpenVINO:
+
+1. Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
+
+2. Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'` in your Docker run command. Example:
 
 ```bash
-docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb...
+docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
 ```
+
+#### Nvidia - CUDA
+
+For Nvidia GPUs with Nvidia/CUDA hardware acceleration, use the same commands used for video transcoding.
 
 ## Import your existing libraries into Immich
 
 - Mount your existing library folder to `/import`
-- In your administration settings, include `/import` as the external path for your user (if you have multiple users with existing libraries set the external path to `/import/<user>`)
-- In your account settings, add a new library and set the path to `/import` or `/import/<user>`
+- In your administration settings, go to "External Libraries", add a library owner, and set the import paths starting (it must start with `/import`)
 
 ## Usage
 
@@ -129,14 +134,15 @@ services:
     ports:
       - 8080:8080
     restart: unless-stopped
-# This container requires an external application to be run separately to be run separately.
-# Redis:
+  # This container requires an external application to be run separately to be run separately.
+  # By default, ports for the databases are opened, be careful when deploying it
+  # Redis:
   redis:
     image: redis
     ports:
       - 6379:6379
     container_name: redis
-# PostgreSQL 14:
+  # PostgreSQL 14:
   postgres14:
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
     ports:
@@ -176,6 +182,7 @@ docker run -d \
   ghcr.io/martabal/immich:latest
 
 # This container requires an external application to be run separately.
+# By default, ports for the databases are opened, be careful when deploying it
 # Redis:
 docker run -d \
   --name=redis \
@@ -252,36 +259,3 @@ Instructions for updating containers:
 - Delete the container: `docker rm immich`
 - Recreate a new container with the same docker run parameters as instructed above (if mapped correctly to a host folder, your `/config` folder and settings will be preserved)
 - You can also remove the old dangling images: `docker image prune`
-
-## Versions
-
-- **23.12.23:** - move to using seperate immich baseimage
-- **07.12.23:** - rebase to ubuntu mantic
-- **07.12.23:** - remove typesense (no longer needed)
-- **24.09.23:** - house cleaning
-- **24.09.23:** - add vars for ml workers/timeout
-- **29.07.23:** - remove cuda acceleration for machine-learning
-- **23.05.23:** - rebase to ubuntu lunar and support cuda acceleration for machine-learning
-- **22.05.23:** - deprecate postgresql docker mod
-- **18.05.23:** - add support for facial recognition
-- **07.05.23:** - remove unused `JWT_SECRET` env
-- **13.04.23:** - add variables to disable typesense and machine learning
-- **10.04.23:** - fix gunicorn
-- **04.04.23:** - use environment variables to set location of the photos folder
-- **09.04.23:** - Cache is downloaded to the host (/config/transformers)
-- **01.04.23:** - remove unused Immich environment variables
-- **21.03.23:** - Add service checks
-- **05.03.23:** - add typesense
-- **27.02.23:** - re-enable aarch64 with pre-release torch build
-- **18.02.23:** - use machine-learning with python
-- **11.02.23:** - use external app block
-- **09.02.23:** - Use Immich environment variables for immich services instead of hosts file
-- **09.02.23:** - execute CLI with the command immich
-- **04.02.23:** - shrink image
-- **26.01.23:** - add unraid migration to readme
-- **26.01.23:** - use find to apply chown to /app, excluding node_modules
-- **26.01.23:** - enable ci testing
-- **24.01.23:** - fix services starting prematurely, causing permission errors.
-- **23.01.23:** - add noml image to readme and add aarch64 image to readme, make github release stable
-- **21.01.23:** - BREAKING: Redis is removed. Update missing param_env_vars & opt_param_env_vars for redis & postgres
-- **02.01.23:** - Initial Release.

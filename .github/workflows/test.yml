@@ -22,17 +22,24 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install python formatter
-        run: pip install ruff
+      - name: Install formatters
+        run: |
+          pip install ruff==0.3.2
+          npm i prettier@3.2.5
 
-      - name: Run linter
+      - name: Run python linter
         run: ruff check **.py
 
-      - uses: psf/black@stable
+      - name: Run python formatter
+        uses: psf/black@stable
         with:
           options: "--check --verbose"
+          version: "24.2.0"
+
+      - name: Run formatter
+        run: npx prettier --check .
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
-          additional_files: 'run'
+          additional_files: "run"

@@ -41,4 +41,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Custom
 build-*/
+node_modules
+package*.json

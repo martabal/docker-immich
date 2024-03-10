@@ -266,10 +266,6 @@ RUN \
   curl -o "/tmp/libcudnn8.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
   dpkg -i "/tmp/libcudnn8.deb" && \
-  cd /app/immich/machine-learning && \
-  poetry source add --no-interaction --no-ansi --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ && \
-  poetry remove --lock --no-interaction --no-ansi --group cuda onnxruntime-gpu && \
-  poetry add --lock --no-interaction --no-ansi --source ort --group cuda onnxruntime-gpu && \
   {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if gpu_acceleration_name == "cuda" %}cuda{% elif gpu_acceleration_name == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
