@@ -4,8 +4,8 @@ on:
     - cron: "*/20 * * * *"
 
 permissions:
-  contents: read
-  pages: write
+  contents: write
+  actions: write
 
 jobs:
   check_new_version:
@@ -47,31 +47,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create new release for AIO
+      - name: Create tag
         run: |
-          git config --global user.email "49699333+dependabot[bot]@users.noreply.github.com"
-          git config --global user.name "dependabot[bot]"
           git tag "${{ needs.check_new_version.outputs.immich_version }}"
           git push --tags
-          curl \
-            -X POST \
-            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-            --data "{\"tag_name\": \"${{ needs.check_new_version.outputs.immich_version }}\",
-                \"target_commitish\": \"main\",
-                \"name\": \"${{ needs.check_new_version.outputs.immich_version }}\",
-                \"generate_release_notes\": true,
-                \"body\": \"Read Immich release notes [here](https://github.com/immich-app/immich/releases/tag/${{ needs.check_new_version.outputs.immich_version }})\",
-                \"draft\": false,
-                \"prerelease\": false}" \
-            "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases"
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ needs.check_new_version.outputs.immich_version }} \
+            --generate-notes \
+            --notes "Read Immich release notes [here](https://github.com/immich-app/immich/releases/tag/${{ needs.check_new_version.outputs.immich_version }})"
 
       - name: Trigger workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl \
-            -X POST \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-            --data '{"event_type": "trigger_build", "client_payload": {"message": "'"${{ needs.check_new_version.outputs.immich_version }}"'"}}' \
-            https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/dispatches
+          gh workflow run docker.yml -f version=${{ needs.check_new_version.outputs.immich_version }}

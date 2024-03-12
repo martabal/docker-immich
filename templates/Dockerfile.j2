@@ -37,38 +37,20 @@ RUN \
     autoconf \
     bc \
     build-essential \
-    cpanminus \
     git \
-    libany-uri-escape-perl \
-    libcapture-tiny-perl \
     libexif-dev \
     libexpat1-dev \
-    libffi-checklib-perl \
-    libfile-chdir-perl \
-    libfile-slurper-perl \
-    libfile-which-perl \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
-    libio-socket-ssl-perl \
     libjpeg-dev \
     libjxl-dev \
     libltdl-dev \
-    libmojolicious-perl \
-    libnet-ssleay-perl \
     liborc-0.4-dev \
-    libpath-tiny-perl \
-    libpkgconfig-perl \
     librsvg2-dev \
     libsort-versions-perl \
     libspng-dev \
-    libterm-table-perl \
-    libtest-fatal-perl \
-    libtest-needs-perl \
-    libtest-warnings-perl \
-    libtest2-suite-perl \
     libtool \
-    libtry-tiny-perl \
     libwebp-dev \
     meson \
     pkg-config \
@@ -93,6 +75,7 @@ RUN \
     libgomp1 \
     libgsf-1-114 \
     libheif1 \
+    libio-compress-brotli-perl \
     libjxl0.7 \
     liblcms2-2 \
     liblqr-1-0 \
@@ -175,7 +158,6 @@ RUN \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
-  ./build-perllib-compress-brotli.sh && \
   echo "**** download geocoding data ****" && \
   curl -o \
     /tmp/cities500.zip -L \
@@ -203,7 +185,7 @@ RUN \
     /tmp/immich --strip-components=1 && \
   echo "**** build server ****" && \
   cd /tmp/immich/server && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   rm -rf node_modules/@img/sharp-libvips* && \
   rm -rf node_modules/@img/sharp-linuxmusl-x64 && \
   cp -r \
@@ -225,11 +207,11 @@ RUN \
     /app/immich/server && \
   echo "**** build open-api ****" && \
   cd /tmp/immich/open-api/typescript-sdk && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   npm run build && \
   echo "**** build web ****" && \
   cd /tmp/immich/web && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   npm run build && \
   cp -a \
     build/* \
@@ -289,16 +271,9 @@ RUN \
     autoconf \
     bc \
     build-essential \
-    cpanminus \
     git \
-    libany-uri-escape-perl \
-    libcapture-tiny-perl \
     libexif-dev \
     libexpat1-dev \
-    libffi-checklib-perl \
-    libfile-chdir-perl \
-    libfile-slurper-perl \
-    libfile-which-perl \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
@@ -306,21 +281,11 @@ RUN \
     libjpeg-dev \
     libjxl-dev \
     libltdl-dev \
-    libmojolicious-perl \
-    libnet-ssleay-perl \
     liborc-0.4-dev \
-    libpath-tiny-perl \
-    libpkgconfig-perl \
     librsvg2-dev \
     libsort-versions-perl \
     libspng-dev \
-    libterm-table-perl \
-    libtest-fatal-perl \
-    libtest-needs-perl \
-    libtest-warnings-perl \
-    libtest2-suite-perl \
     libtool \
-    libtry-tiny-perl \
     libwebp-dev \
     meson \
     pkg-config \
@@ -338,7 +303,6 @@ RUN \
     /usr/share/keyrings/intel-graphics.gpg \
     {% endif -%}
     /root/.cache \
-    /root/.cpanm \
     /root/.npm \
     /tmp/* \
     /usr/share/keyrings/nodesource.gpg \
