@@ -13,10 +13,6 @@ This repo is a fork of the official [AIO image for Immich](https://github.com/im
 
 ## Supported Architectures
 
-We use Docker manifest for cross-platform compatibility. More details can be found on [Docker's website](https://github.com/docker/distribution/blob/master/docs/spec/manifest-v2-2.md#manifest-list).
-
-To obtain the appropriate image for your architecture, simply pull `ghcr.io/martabal/immich:latest`. Alternatively, you can also obtain specific architecture images by using tags.
-
 This image supports the following architectures:
 
 | Architecture | Available |
@@ -227,7 +223,7 @@ To configure the container, pass variables at runtime using the format `<externa
 
 ## Umask for running applications
 
-All of our images allow overriding the default umask setting for services started within the containers using the optional -e UMASK=022 option. Note that umask works differently than chmod and subtracts permissions based on its value, not adding. For more information, please refer to the Wikipedia article on umask [here](https://en.wikipedia.org/wiki/Umask).
+The image allow overriding the default umask setting for services started within the containers using the optional -e UMASK=022 option. Note that umask works differently than chmod and subtracts permissions based on its value, not adding. For more information, please refer to the Wikipedia article on umask [here](https://en.wikipedia.org/wiki/Umask).
 
 ## User / Group Identifiers
 
@@ -242,9 +238,9 @@ Example: `PUID=1000` and `PGID=1000`. To find your PUID and PGID, run `id user`.
 
 ## Updating the Container
 
-Most of our images are static, versioned, and require an image update and container recreation to update the app. We do not recommend or support updating apps inside the container. Check the [Application Setup](#application-setup) section for recommendations for the specific image.
+Check the [Application Setup](#application-setup) section for recommendations for the specific image.
 
-Instructions for updating containers:
+Instructions for updating the container:
 
 ### Via Docker Compose
 

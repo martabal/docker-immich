@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import shutil
+from shutil import copytree, rmtree
 from jinja2 import Environment, FileSystemLoader
 import os
 
@@ -74,14 +74,12 @@ for i, flavor in enumerate(flavors):
     root_folder = os.path.join(type_folder, "root")
 
     if os.path.exists(root_folder):
-        shutil.rmtree(root_folder)
+        rmtree(root_folder)
 
-    shutil.copytree(os.path.join(output_dir, "root"), root_folder)
+    copytree(os.path.join(output_dir, "root"), root_folder)
 
     if flavor["machine_learning"] is False:
-        shutil.rmtree(
-            os.path.join(root_folder, "etc/s6-overlay/s6-rc.d/svc-machine-learning")
-        )
+        rmtree(os.path.join(root_folder, "etc/s6-overlay/s6-rc.d/svc-machine-learning"))
         os.remove(
             os.path.join(
                 root_folder,
