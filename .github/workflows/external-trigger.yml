@@ -16,14 +16,16 @@ jobs:
       current_version: ${{ steps.check_version.outputs.current_version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Check if new version is available
         id: check_version
         run: |
           current_version=$(curl -sL https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/latest | jq -r '.tag_name')
           immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+          if [ -z "$current_version" ] || [ -z "$immich_version" ]; then
+              echo "Error: One of the versions is null."
+              exit 1
+          fi
           if [ "$current_version" != "$immich_version" ]; then
             if git tag | grep -q "^$immich_version$"; then
               echo "Tag '$immich_version' exists."
@@ -46,7 +48,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag

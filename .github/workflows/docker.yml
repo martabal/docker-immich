@@ -52,8 +52,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set tags
         id: tags
@@ -63,6 +61,27 @@ jobs:
             immich_version="${{ inputs.version }}"
           else
             immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+            counter=0
+
+            # Loop until immich_version is not "null" or counter reaches 10
+            while [ $counter -lt 10 ]; do
+                immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+
+                # Check if immich_version is not "null"
+                if [ "$immich_version" != "null" ]; then
+                    echo "immich_version is not null: $immich_version"
+                    break
+                else
+                    echo "immich_version is still null, retrying in 10 seconds..."
+                    sleep 10
+                    ((counter++))
+                fi
+            done
+
+            if [ "$immich_version" = "null" ]; then
+                echo "immich_version is still null after 10 attempts, exiting..."
+                exit 1
+            fi
           fi
           short_version="${immich_version#v}"
           echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
