@@ -28,24 +28,24 @@ jobs:
         include:
           - image: openvino
             context: build-main
-            file: Dockerfile.openvino
+            folder: openvino
             platforms: linux/amd64
             suffix: -openvino
 
           - image: cuda
             context: build-main
-            file: Dockerfile.cuda
+            folder: cuda
             platforms: linux/amd64
             suffix: -cuda
 
-          - image: classic
+          - image: main
             context: build-main
-            file: Dockerfile
+            folder: main
             platforms: linux/amd64,linux/arm64
 
           - image: noml
             context: build-noml
-            file: Dockerfile
+            folder: main
             platforms: linux/amd64,linux/arm64
             suffix: -noml
 
@@ -85,7 +85,7 @@ jobs:
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}-${{ steps.tags.outputs.commit }}
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
-            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' && github.event_name != 'pull_request' }}
+            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'main' && github.event_name != 'pull_request' }}
             type=raw,value=${{ steps.tags.outputs.short_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
@@ -106,9 +106,8 @@ jobs:
       - name: Build and push docker images
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.context }}
+          context: ${{ matrix.context }}/${{ matrix.folder }}
           provenance: false # prevent unknown architecture
-          file: ${{ matrix.context }}/${{ matrix.file }}
           platforms: ${{ matrix.platforms }}
           push: true
           labels: ${{ steps.metadata.outputs.labels }}
