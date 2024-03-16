@@ -1,4 +1,4 @@
-name: External trigger
+name: Check for new version
 on:
   schedule:
     - cron: "*/20 * * * *"
