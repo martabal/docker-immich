@@ -242,7 +242,7 @@ RUN \
     ann/ann.py \
     /app/immich/machine-learning/ann && \
   {% if gpu_acceleration_name == "openvino" -%}
-  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.1.0 && \
+  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.3.0 && \
   {% elif gpu_acceleration_name == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \

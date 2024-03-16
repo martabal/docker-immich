@@ -59,11 +59,17 @@ for i, flavor in enumerate(flavors):
 
     for type in flavor["types"]:
         flavor_folder = os.path.join(type_folder, type["name"])
-        root_folder = os.path.join(flavor_folder, "root")
+        flavor_root_folder = os.path.join(flavor_folder, "root")
+        dockerfile_filepath = os.path.join(flavor_folder, "Dockerfile")
 
-        if os.path.exists(flavor_folder):
-            rmtree(flavor_folder)
-        os.makedirs(flavor_folder)
+        if not os.path.exists(flavor_folder):
+            os.makedirs(flavor_folder)
+
+        if os.path.exists(flavor_root_folder):
+            rmtree(flavor_root_folder)
+
+        if os.path.exists(dockerfile_filepath):
+            os.remove(dockerfile_filepath)
 
         variables = {
             "gpu_acceleration_name": type["machine_learning_provider"],
@@ -71,14 +77,13 @@ for i, flavor in enumerate(flavors):
         }
 
         dockerfile_rendered_template = dockerfile_template.render(variables)
-        dockerfile_filepath = os.path.join(flavor_folder, "Dockerfile")
 
         with open(dockerfile_filepath, "w") as dockerfile:
             dockerfile.write(dockerfile_rendered_template)
 
         print(f" - Dockerfile for {type['name']} generated successfully.")
 
-        copytree(os.path.join(output_dir, "root"), root_folder)
+        copytree(os.path.join(output_dir, "root"), flavor_root_folder)
 
         for subfolder in subfolders:
             folder_name = os.path.basename(subfolder)
@@ -91,7 +96,8 @@ for i, flavor in enumerate(flavors):
                 init_config_rendered_template = init_config_template.render(variables)
 
                 folder_dir = os.path.join(
-                    os.path.join(root_folder, "etc/s6-overlay/s6-rc.d"), folder_name
+                    os.path.join(flavor_root_folder, "etc/s6-overlay/s6-rc.d"),
+                    folder_name,
                 )
                 run_filepath = os.path.join(folder_dir, "run")
 
@@ -101,10 +107,14 @@ for i, flavor in enumerate(flavors):
                     os.chmod(run_filepath, st.st_mode | 0o111)
 
     if flavor["machine_learning"] is False:
-        rmtree(os.path.join(root_folder, "etc/s6-overlay/s6-rc.d/svc-machine-learning"))
+        rmtree(
+            os.path.join(
+                flavor_root_folder, "etc/s6-overlay/s6-rc.d/svc-machine-learning"
+            )
+        )
         os.remove(
             os.path.join(
-                root_folder,
+                flavor_root_folder,
                 "etc/s6-overlay/s6-rc.d/user/contents.d/svc-machine-learning",
             )
         )
