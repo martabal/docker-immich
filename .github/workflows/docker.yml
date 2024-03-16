@@ -27,25 +27,25 @@ jobs:
       matrix:
         include:
           - image: openvino
-            context: build-main
-            folder: openvino
+            type: main
+            flavor: openvino
             platforms: linux/amd64
             suffix: -openvino
 
           - image: cuda
-            context: build-main
-            folder: cuda
+            type: main
+            flavor: cuda
             platforms: linux/amd64
             suffix: -cuda
 
-          - image: main
-            context: build-main
-            folder: main
+          - image: classic
+            type: main
+            flavor: classic
             platforms: linux/amd64,linux/arm64
 
           - image: noml
-            context: build-noml
-            folder: main
+            type: noml
+            flavor: classic
             platforms: linux/amd64,linux/arm64
             suffix: -noml
 
@@ -91,7 +91,7 @@ jobs:
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
-        run: python3 render_templates.py
+        run: python3 render_templates.py --type ${{ matrix.type }} --flavor ${{ matrix.flavor }}
 
       - name: Generate docker image tags
         id: metadata
@@ -104,7 +104,7 @@ jobs:
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}-${{ steps.tags.outputs.commit }}
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
-            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'main' && github.event_name != 'pull_request' }}
+            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' && github.event_name != 'pull_request' }}
             type=raw,value=${{ steps.tags.outputs.short_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
@@ -125,7 +125,7 @@ jobs:
       - name: Build and push docker images
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.context }}/${{ matrix.folder }}
+          context: build-${{ matrix.type }}/${{ matrix.flavor }}
           provenance: false # prevent unknown architecture
           platforms: ${{ matrix.platforms }}
           push: true
