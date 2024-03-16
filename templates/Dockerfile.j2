@@ -221,12 +221,12 @@ RUN \
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
   {% if gpu_acceleration_name == "openvino" -%}
-  python3.10 -m pip install -U --no-cache-dir \
+  python3.10 -m pip install --disable-pip-version-check -U --no-cache-dir \
     poetry \
     virtualenv && \
   python3.10 -m venv /lsiopy && \
   {% else -%}
-  pip install --break-system-packages -U --no-cache-dir \
+  pip install --disable-pip-version-check --break-system-packages -U --no-cache-dir \
     poetry && \
   python3 -m venv /lsiopy && \
   {% endif -%}

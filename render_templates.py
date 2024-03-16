@@ -47,15 +47,15 @@ templates_dir = os.path.join(output_dir, "templates")
 env = Environment(loader=FileSystemLoader(templates_dir))
 dockerfile_template = env.get_template(dockerfile_template_name)
 
+subfolders_templates_run = [
+    os.path.basename(f.path) for f in os.scandir(templates_dir) if f.is_dir()
+]
+
 
 for i, flavor in enumerate(flavors):
     print(f"generating Dockerfiles for {flavor['name']}: ")
 
     type_folder = os.path.join(output_dir, f"build-{flavor['name']}")
-
-    subfolders = [
-        os.path.basename(f.path) for f in os.scandir(templates_dir) if f.is_dir()
-    ]
 
     for type in flavor["types"]:
         flavor_folder = os.path.join(type_folder, type["name"])
@@ -85,7 +85,7 @@ for i, flavor in enumerate(flavors):
 
         copytree(os.path.join(output_dir, "root"), flavor_root_folder)
 
-        for subfolder in subfolders:
+        for subfolder in subfolders_templates_run:
             folder_name = os.path.basename(subfolder)
             if not (
                 flavor["machine_learning"] is False
