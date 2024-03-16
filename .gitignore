@@ -46,3 +46,4 @@ Temporary Items
 build-*/
 node_modules
 package*.json
+.venv/

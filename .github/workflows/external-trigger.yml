@@ -1,4 +1,4 @@
-name: External trigger
+name: Check for new version
 on:
   schedule:
     - cron: "*/20 * * * *"
@@ -16,8 +16,6 @@ jobs:
       current_version: ${{ steps.check_version.outputs.current_version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Check if new version is available
         id: check_version
@@ -46,7 +44,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag
