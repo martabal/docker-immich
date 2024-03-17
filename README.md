@@ -10,7 +10,7 @@
 
 ## What is it ?
 
-This repo is a fork of the official [AIO image for Immich](https://github.com/imagegenius/docker-immich). Its main goal is to provide docker images with pre-built machine learning support for CUDA and openvino.
+This repo is a fork of the official [AIO image for Immich](https://github.com/imagegenius/docker-immich). Its main goal is to provide docker images with pre-installed machine learning support for CUDA and openvino.
 
 ## Supported Architectures
 

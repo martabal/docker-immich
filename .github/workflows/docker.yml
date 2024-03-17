@@ -91,7 +91,7 @@ jobs:
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
-        run: python3 render_templates.py --group ${{ matrix.group }} --flavor ${{ matrix.flavor }}
+        run: python3 render_templates/main.py --group ${{ matrix.group }} --flavor ${{ matrix.flavor }}
 
       - name: Generate docker image tags
         id: metadata

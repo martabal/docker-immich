@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
 from jinja2 import Environment, FileSystemLoader
 import os
 from shutil import copytree, rmtree
@@ -51,6 +52,7 @@ flavors: List[Group] = [
 dockerfile_template_name: str = "Dockerfile.j2"
 output_dir: str = os.getcwd()
 templates_dir: str = os.path.join(output_dir, "templates")
+build_folder_prefix = "build-"
 
 env = Environment(loader=FileSystemLoader(templates_dir))
 dockerfile_template = env.get_template(dockerfile_template_name)
@@ -79,12 +81,18 @@ def get_flavor_choices() -> List[str]:
     return list(choices)
 
 
-def generate_all() -> None:
+def generate_all(build_path: Optional[str] = None) -> None:
     for i, flavor in enumerate(flavors):
         print(f"generating Dockerfiles and context for {flavor['name']}: ")
-
-        group_folder = os.path.join(output_dir, f"build-{flavor['name']}")
-
+        if build_path:
+            build_folder = os.path.join(output_dir, build_path)
+            group_folder = os.path.join(
+                build_folder, f"{build_folder_prefix}{flavor['name']}"
+            )
+        else:
+            group_folder = os.path.join(
+                output_dir, f"{build_folder_prefix}{flavor['name']}"
+            )
         for group in flavor["flavors"]:
             generate_template(
                 group["name"],
@@ -103,6 +111,7 @@ def generate_template(
     group_machine_learning_provider: str,
     flavor_machine_learning: str,
 ) -> None:
+
     flavor_folder = os.path.join(group_folder, group_name)
     flavor_root_folder = os.path.join(flavor_folder, "root")
     dockerfile_filepath = os.path.join(flavor_folder, "Dockerfile")
@@ -160,7 +169,9 @@ def generate_template(
     print(f" - Dockerfile and context for {group_name} generated successfully.")
 
 
-def main() -> None:
+def init(build_path: Optional[str] = None, argv: Optional[List[str]] = None) -> None:
+    if argv is None:
+        args = sys.argv[1:]
     parser = argparse.ArgumentParser(
         description="Example program with optional arguments"
     )
@@ -179,13 +190,21 @@ def main() -> None:
         choices=get_flavor_choices(),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.group is not None and args.flavor is not None:
         group_flavor_info = get_group_and_flavor(args.group, args.flavor)
         if group_flavor_info:
             flavor_group, flavor = group_flavor_info
-            group_folder = os.path.join(output_dir, f"build-{flavor['name']}")
+            if build_path:
+                build_folder = os.path.join(output_dir, build_path)
+                group_folder = os.path.join(
+                    build_folder, f"{build_folder_prefix}{flavor['name']}"
+                )
+            else:
+                group_folder = os.path.join(
+                    output_dir, f"{build_folder_prefix}{flavor['name']}"
+                )
             print(f"generating Dockerfiles and context for {args.group}: ")
             generate_template(
                 flavor_group["name"],
@@ -194,16 +213,17 @@ def main() -> None:
                 flavor["machine_learning"],
             )
         else:
-            print(f"Can't generate templates for {args.group} - {args.flavor}")
-            exit(1)
+            raise Exception(
+                f"Can't generate templates for {args.group} - {args.flavor}"
+            )
+
     elif args.group is None and args.flavor is None:
-        generate_all()
+        generate_all(build_path)
     else:
-        print(
+        raise Exception(
             f"Please provide a {'group' if args.group is None else 'flavor'}; you need to provide both --group and --flavor arguments"
         )
-        exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    init()
