@@ -21,29 +21,15 @@ def run_around_tests():
 
 
 def test_create_all_dependencies():
-    init(test_folder_name, [])
-
-
-def test_unavailable_flavor():
-    argv = ["--group", "noml", "--flavor", "cuda"]
-
-    with pytest.raises(Exception):
-        init(test_folder_name, argv)
-
-
-def test_missing_argument():
-    argv = ["--group", "noml"]
-
-    with pytest.raises(Exception):
-        init(test_folder_name, argv)
+    argv = ["--build-path", test_folder_name]
+    init(argv)
 
 
 def test_check_folder():
     argv = []
-    for group in flavors:
-        for flavor in group["flavors"]:
-            argv = ["--group", group["name"], "--flavor", flavor["name"]]
-            folder = build_folder_prefix + group["name"] + "/" + flavor["name"]
-            init(test_folder_name, argv)
-            flavor_path = os.path.join(test_folder_path, folder)
-            assert os.path.exists(flavor_path) is True
+    for flavor in flavors:
+        argv = ["--flavor", flavor["name"], "--build-path", test_folder_name]
+        folder = build_folder_prefix + flavor["name"]
+        init(argv)
+        flavor_path = os.path.join(test_folder_path, folder)
+        assert os.path.exists(flavor_path) is True

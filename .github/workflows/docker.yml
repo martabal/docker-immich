@@ -27,25 +27,21 @@ jobs:
       matrix:
         include:
           - image: openvino
-            group: main
             flavor: openvino
             platforms: linux/amd64
             suffix: -openvino
 
           - image: cuda
-            group: main
             flavor: cuda
             platforms: linux/amd64
             suffix: -cuda
 
           - image: classic
-            group: main
             flavor: classic
             platforms: linux/amd64,linux/arm64
 
           - image: noml
-            group: noml
-            flavor: classic
+            flavor: noml
             platforms: linux/amd64,linux/arm64
             suffix: -noml
 
@@ -91,7 +87,7 @@ jobs:
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
-        run: python3 render_templates/main.py --group ${{ matrix.group }} --flavor ${{ matrix.flavor }}
+        run: python3 render_templates/main.py --flavor ${{ matrix.flavor }}
 
       - name: Generate docker image tags
         id: metadata
@@ -125,7 +121,7 @@ jobs:
       - name: Build and push docker images
         uses: docker/build-push-action@v5
         with:
-          context: build-${{ matrix.group }}/${{ matrix.flavor }}
+          context: build-${{ matrix.flavor }}
           provenance: false # prevent unknown architecture
           platforms: ${{ matrix.platforms }}
           push: true
