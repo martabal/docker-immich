@@ -13,13 +13,6 @@ class Flavor(TypedDict):
     machine_learning_provider: Optional[str]
 
 
-def get_flavor_by_name(flavor_name) -> Optional[Flavor]:
-    for flavor in flavors:
-        if flavor["name"] == flavor_name:
-            return flavor
-    return None
-
-
 flavors: List[Flavor] = [
     {
         "name": "cuda",
@@ -38,15 +31,20 @@ flavors: List[Flavor] = [
         "machine_learning_provider": None,
     },
 ]
-dockerfile_template_name: str = "Dockerfile.j2"
-output_dir: str = os.getcwd()
-templates_dir: str = os.path.join(output_dir, "templates")
+dockerfile_template_name = "Dockerfile.j2"
+output_dir = os.getcwd()
+templates_dir = os.path.join(output_dir, "templates")
 build_folder_prefix = "build-"
+s6_path = "etc/s6-overlay/s6-rc.d"
+s6_content = os.path.join(s6_path, "user/contents.d")
+machine_learning_svc = "svc-machine-learning"
+machine_learning_svc_path = os.path.join(s6_path, machine_learning_svc)
+machine_learning_svc_content = os.path.join(s6_content, machine_learning_svc)
 
 env = Environment(loader=FileSystemLoader(templates_dir))
 dockerfile_template = env.get_template(dockerfile_template_name)
 
-subfolders_templates_run: List[str] = [
+subfolders_templates_run = [
     os.path.basename(f.path) for f in os.scandir(templates_dir) if f.is_dir()
 ]
 
@@ -54,41 +52,37 @@ subfolders_templates_run: List[str] = [
 def generate_all(build_path: Optional[str] = None) -> None:
     print("generating Dockerfiles and context for all flavors: ")
     for flavor in flavors:
-
+        build_folder_name = build_folder_prefix + flavor["name"]
         if build_path:
-            build_folder = os.path.join(output_dir, build_path)
-            flavor_folder = os.path.join(
-                build_folder, f"{build_folder_prefix}{flavor['name']}"
-            )
+            root_folder = os.path.join(output_dir, build_path)
+            build_folder = os.path.join(root_folder, build_folder_name)
         else:
-            flavor_folder = os.path.join(
-                output_dir, f"{build_folder_prefix}{flavor['name']}"
-            )
+            build_folder = os.path.join(output_dir, build_folder_name)
 
         generate_template(
-            flavor_folder,
+            build_folder,
             flavor,
         )
 
 
 def generate_template(
-    flavor_folder: str,
+    build_folder: str,
     flavor: Flavor,
 ) -> None:
 
     flavor_name = flavor["name"]
     machine_learning_provider = flavor["machine_learning_provider"]
-    flavor_root_folder = os.path.join(flavor_folder, "root")
-    dockerfile_filepath = os.path.join(flavor_folder, "Dockerfile")
+    root_folder_path = os.path.join(build_folder, "root")
+    dockerfile_path = os.path.join(build_folder, "Dockerfile")
 
-    if not os.path.exists(flavor_folder):
-        os.makedirs(flavor_folder)
+    if not os.path.exists(build_folder):
+        os.makedirs(build_folder)
 
-    if os.path.exists(flavor_root_folder):
-        rmtree(flavor_root_folder)
+    if os.path.exists(root_folder_path):
+        rmtree(root_folder_path)
 
-    if os.path.exists(dockerfile_filepath):
-        os.remove(dockerfile_filepath)
+    if os.path.exists(dockerfile_path):
+        os.remove(dockerfile_path)
 
     variables = {
         "machine_learning_provider": machine_learning_provider,
@@ -96,50 +90,54 @@ def generate_template(
 
     dockerfile_rendered_template = dockerfile_template.render(variables)
 
-    with open(dockerfile_filepath, "w") as dockerfile:
+    with open(dockerfile_path, "w") as dockerfile:
         dockerfile.write(dockerfile_rendered_template)
 
-    copytree(os.path.join(output_dir, "root"), flavor_root_folder)
+    copytree(os.path.join(output_dir, "root"), root_folder_path)
 
     for subfolder in subfolders_templates_run:
         folder_name = os.path.basename(subfolder)
         if not (
             machine_learning_provider is None and "machine-learning" in folder_name
         ):
-            init_config_template_name: str = os.path.join(subfolder, "run.j2")
-            init_config_template = env.get_template(init_config_template_name)
-            init_config_rendered_template: str = init_config_template.render(variables)
+            run_template_name = os.path.join(subfolder, "run.j2")
+            run_template = env.get_template(run_template_name)
+            run_rendered_template = run_template.render(variables)
 
-            folder_dir_path: str = os.path.join(
-                os.path.join(flavor_root_folder, "etc/s6-overlay/s6-rc.d"),
+            s6_rc_path = os.path.join(
+                os.path.join(root_folder_path, s6_path),
                 folder_name,
             )
-            run_filepath: str = os.path.join(folder_dir_path, "run")
+            run_path = os.path.join(s6_rc_path, "run")
 
-            with open(run_filepath, "w") as run:
-                run.write(init_config_rendered_template)
-                st = os.stat(run_filepath)
-                os.chmod(run_filepath, st.st_mode | 0o111)
+            with open(run_path, "w") as run:
+                run.write(run_rendered_template)
+                st = os.stat(run_path)
+                os.chmod(run_path, st.st_mode | 0o111)
+
         if machine_learning_provider is None and "machine-learning" in folder_name:
-            rmtree(
-                os.path.join(
-                    flavor_root_folder, "etc/s6-overlay/s6-rc.d/svc-machine-learning"
-                )
-            )
+            rmtree(os.path.join(root_folder_path, machine_learning_svc_path))
             os.remove(
                 os.path.join(
-                    flavor_root_folder,
-                    "etc/s6-overlay/s6-rc.d/user/contents.d/svc-machine-learning",
+                    root_folder_path,
+                    machine_learning_svc_content,
                 )
             )
     print(f" - Dockerfile and context for {flavor_name} generated successfully.")
 
 
-def init(argv: Optional[List[str]] = None) -> None:
+def get_flavor_by_name(flavor_name: str) -> Optional[Flavor]:
+    for flavor in flavors:
+        if flavor["name"] == flavor_name:
+            return flavor
+    return None
+
+
+def init(argv: Optional[List[str]] = None):
     if argv is None:
-        args = sys.argv[1:]
+        args = sys.argv
     parser = argparse.ArgumentParser(
-        description="Example program with optional arguments"
+        description="Render templates for differents AIO flavors"
     )
     parser.add_argument(
         "-b",
@@ -163,18 +161,15 @@ def init(argv: Optional[List[str]] = None) -> None:
         if flavor is None:
             raise Exception(f"Flavor {args.flavor} does not exist")
 
+        build_folder_name = build_folder_prefix + flavor_name
         if args.build_path:
-            build_folder = os.path.join(output_dir, args.build_path)
-            flavor_folder = os.path.join(
-                build_folder, f"{build_folder_prefix}{flavor_name}"
-            )
+            root_folder = os.path.join(output_dir, args.build_path)
+            build_folder = os.path.join(root_folder, build_folder_name)
         else:
-            flavor_folder = os.path.join(
-                output_dir, f"{build_folder_prefix}{flavor_name}"
-            )
+            build_folder = os.path.join(output_dir, build_folder_name)
         print(f"generating Dockerfiles and context for {flavor_name}: ")
         generate_template(
-            flavor_folder,
+            build_folder,
             flavor,
         )
 
