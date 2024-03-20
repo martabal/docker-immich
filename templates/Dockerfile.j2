@@ -100,11 +100,14 @@ RUN \
     {% endif -%}
     zlib1g && \
   {% if machine_learning_provider == "openvino" -%}
-  echo "**** install dev-dependencies for python 3.10 ****" && \
+  echo "**** install openvino dependencies ****" && \
   apt-get install --no-install-recommends -y \
     intel-level-zero-gpu \
     intel-opencl-icd \
     level-zero \
+    ocl-icd-libopencl1 && \
+  echo "**** install dev-dependencies for python 3.10 ****" && \
+  apt-get install --no-install-recommends -y \
     libbz2-dev \
     libc6-dev \
     libffi-dev \
@@ -112,7 +115,6 @@ RUN \
     libreadline-dev \
     libsqlite3-dev \
     libssl-dev \
-    ocl-icd-libopencl1 \
     zlib1g-dev && \
   echo "**** compile python 3.10 ****" && \
   mkdir -p /tmp/python && \
