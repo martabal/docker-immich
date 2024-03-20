@@ -11,10 +11,11 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-  repository_dispatch:
-    types: [trigger_build]
   schedule:
     - cron: "0 12 * * 3"
+
+permissions:
+  packages: write
 
 jobs:
   build_docker:
@@ -26,33 +27,23 @@ jobs:
       matrix:
         include:
           - image: openvino
-            context: build-main
-            file: Dockerfile.openvino
             platforms: linux/amd64
             suffix: -openvino
 
           - image: cuda
-            context: build-main
-            file: Dockerfile.cuda
             platforms: linux/amd64
             suffix: -cuda
 
           - image: classic
-            context: build-main
-            file: Dockerfile
             platforms: linux/amd64,linux/arm64
 
           - image: noml
-            context: build-noml
-            file: Dockerfile
             platforms: linux/amd64,linux/arm64
             suffix: -noml
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set tags
         id: tags
@@ -60,10 +51,29 @@ jobs:
           echo "Generate tags"
           if [ "${{ inputs.version }}" != '' ]; then
             immich_version="${{ inputs.version }}"
-          elif [ -n "${{ github.event.client_payload.message }}" ]; then
-            immich_version="${{ github.event.client_payload.message }}"
           else
             immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+            counter=0
+
+            # Loop until immich_version is not "null" or counter reaches 10
+            while [ $counter -lt 10 ]; do
+                immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
+
+                # Check if immich_version is not "null"
+                if [ "$immich_version" != "null" ]; then
+                    echo "immich_version is not null: $immich_version"
+                    break
+                else
+                    echo "immich_version is still null, retrying in 10 seconds..."
+                    sleep 10
+                    ((counter++))
+                fi
+            done
+
+            if [ "$immich_version" = "null" ]; then
+                echo "immich_version is still null after 10 attempts, exiting..."
+                exit 1
+            fi
           fi
           short_version="${immich_version#v}"
           echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
@@ -73,7 +83,7 @@ jobs:
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
       - name: Create Dockerfile from template
-        run: python3 render_templates.py
+        run: python3 render_templates/main.py --flavor ${{ matrix.image }}
 
       - name: Generate docker image tags
         id: metadata
@@ -102,14 +112,13 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GH_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push docker images
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.context }}
+          context: build-${{ matrix.image }}
           provenance: false # prevent unknown architecture
-          file: ${{ matrix.context }}/${{ matrix.file }}
           platforms: ${{ matrix.platforms }}
           push: true
           labels: ${{ steps.metadata.outputs.labels }}

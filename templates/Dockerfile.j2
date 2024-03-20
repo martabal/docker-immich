@@ -10,7 +10,7 @@ LABEL maintainer="martabal"
 
 # environment settings
 ENV \
-  {% if machine_learning == True -%}
+  {% if machine_learning_provider -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
   TRANSFORMERS_CACHE="/config/machine-learning" \
@@ -28,7 +28,7 @@ RUN \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
-  {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+  {% if machine_learning_provider == "openvino" -%}
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy/lts/2350 unified" >>/etc/apt/sources.list.d/openvino.list && \
   curl -s https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor | tee /usr/share/keyrings/intel-graphics.gpg >/dev/null && \
   {% endif -%}
@@ -37,42 +37,24 @@ RUN \
     autoconf \
     bc \
     build-essential \
-    cpanminus \
     git \
-    libany-uri-escape-perl \
-    libcapture-tiny-perl \
     libexif-dev \
     libexpat1-dev \
-    libffi-checklib-perl \
-    libfile-chdir-perl \
-    libfile-slurper-perl \
-    libfile-which-perl \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
-    libio-socket-ssl-perl \
     libjpeg-dev \
     libjxl-dev \
     libltdl-dev \
-    libmojolicious-perl \
-    libnet-ssleay-perl \
     liborc-0.4-dev \
-    libpath-tiny-perl \
-    libpkgconfig-perl \
     librsvg2-dev \
     libsort-versions-perl \
     libspng-dev \
-    libterm-table-perl \
-    libtest-fatal-perl \
-    libtest-needs-perl \
-    libtest-warnings-perl \
-    libtest2-suite-perl \
     libtool \
-    libtry-tiny-perl \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3.11-dev \
     {% endif -%}
     unzip && \
@@ -81,7 +63,7 @@ RUN \
     # until jellyfin-ffmpeg supports noble
     ffmpeg \
     $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
-    {% if machine_learning == True and gpu_acceleration_name == "cuda" -%}
+    {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
     libcudart12 \
@@ -95,6 +77,7 @@ RUN \
     libgomp1 \
     libgsf-1-114 \
     libheif1 \
+    libio-compress-brotli-perl \
     libjxl0.7 \
     liblcms2-2 \
     liblqr-1-0 \
@@ -112,18 +95,21 @@ RUN \
     mesa-va-drivers \
     nodejs \
     perl \
-    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3.11 \
     python3-pip \
     python3.11-venv \
     {% endif -%}
     zlib1g && \
-  {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
-  echo "**** install dev-dependencies for python 3.10 ****" && \
+  {% if machine_learning_provider == "openvino" -%}
+  echo "**** install openvino dependencies ****" && \
   apt-get install --no-install-recommends -y \
     intel-level-zero-gpu \
     intel-opencl-icd \
     level-zero \
+    ocl-icd-libopencl1 && \
+  echo "**** install dev-dependencies for python 3.10 ****" && \
+  apt-get install --no-install-recommends -y \
     libbz2-dev \
     libc6-dev \
     libffi-dev \
@@ -131,7 +117,6 @@ RUN \
     libreadline-dev \
     libsqlite3-dev \
     libssl-dev \
-    ocl-icd-libopencl1 \
     zlib1g-dev && \
   echo "**** compile python 3.10 ****" && \
   mkdir -p /tmp/python && \
@@ -147,7 +132,7 @@ RUN \
   echo "**** create folders ****" && \
   mkdir -p \
     /app/immich/geodata \
-    {% if machine_learning == True -%}
+    {% if machine_learning_provider -%}
     /app/immich/machine-learning/ann \
     {% endif -%}
     /app/immich/server \
@@ -177,7 +162,6 @@ RUN \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
-  ./build-perllib-compress-brotli.sh && \
   echo "**** download geocoding data ****" && \
   curl -o \
     /tmp/cities500.zip -L \
@@ -205,7 +189,7 @@ RUN \
     /tmp/immich --strip-components=1 && \
   echo "**** build server ****" && \
   cd /tmp/immich/server && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   rm -rf node_modules/@img/sharp-libvips* && \
   rm -rf node_modules/@img/sharp-linuxmusl-x64 && \
   cp -r \
@@ -227,26 +211,26 @@ RUN \
     /app/immich/server && \
   echo "**** build open-api ****" && \
   cd /tmp/immich/open-api/typescript-sdk && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   npm run build && \
   echo "**** build web ****" && \
   cd /tmp/immich/web && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   npm run build && \
   cp -a \
     build/* \
     static \
     /app/immich/server/www && \
-  {% if machine_learning == True -%}
+  {% if machine_learning_provider -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
-  {% if gpu_acceleration_name == "openvino" -%}
-  python3.10 -m pip install -U --no-cache-dir \
+  {% if machine_learning_provider == "openvino" -%}
+  python3.10 -m pip install --disable-pip-version-check -U --no-cache-dir \
     poetry \
     virtualenv && \
   python3.10 -m venv /lsiopy && \
   {% else -%}
-  pip install --break-system-packages -U --no-cache-dir \
+  pip install --disable-pip-version-check --break-system-packages -U --no-cache-dir \
     poetry && \
   python3.11 -m venv /lsiopy && \
   {% endif -%}
@@ -261,28 +245,24 @@ RUN \
   cp -a \
     ann/ann.py \
     /app/immich/machine-learning/ann && \
-  {% if gpu_acceleration_name == "openvino" -%}
-  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.1.0 && \
-  {% elif gpu_acceleration_name == "cuda" -%}
+  {% if machine_learning_provider == "openvino" -%}
+  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.3.0 && \
+  {% elif machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
   dpkg -i "/tmp/libcudnn8.deb" && \
-  cd /app/immich/machine-learning && \
-  poetry source add --no-interaction --no-ansi --priority=supplemental ort https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ && \
-  poetry remove --lock --no-interaction --no-ansi --group cuda onnxruntime-gpu && \
-  poetry add --lock --no-interaction --no-ansi --source ort --group cuda onnxruntime-gpu && \
   {% endif -%}
-  poetry install --sync --no-interaction --no-ansi --no-root --with {% if gpu_acceleration_name == "cuda" %}cuda{% elif gpu_acceleration_name == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
+  poetry install --sync --no-interaction --no-ansi --no-root --with {% if machine_learning_provider == "cuda" %}cuda{% elif machine_learning_provider == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
   echo "**** cleanup ****" && \
-  {% if machine_learning == True -%}
+  {% if machine_learning_provider -%}
   for cleanfiles in *.pyc *.pyo; do \
     find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
   done && \
   {% endif -%}
   apt-get remove -y --purge \
-    {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+    {% if machine_learning_provider and machine_learning_provider == "openvino" -%}
     libbz2-dev \
     libc6-dev \
     libffi-dev \
@@ -295,16 +275,9 @@ RUN \
     autoconf \
     bc \
     build-essential \
-    cpanminus \
     git \
-    libany-uri-escape-perl \
-    libcapture-tiny-perl \
     libexif-dev \
     libexpat1-dev \
-    libffi-checklib-perl \
-    libfile-chdir-perl \
-    libfile-slurper-perl \
-    libfile-which-perl \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
@@ -312,25 +285,15 @@ RUN \
     libjpeg-dev \
     libjxl-dev \
     libltdl-dev \
-    libmojolicious-perl \
-    libnet-ssleay-perl \
     liborc-0.4-dev \
-    libpath-tiny-perl \
-    libpkgconfig-perl \
     librsvg2-dev \
     libsort-versions-perl \
     libspng-dev \
-    libterm-table-perl \
-    libtest-fatal-perl \
-    libtest-needs-perl \
-    libtest-warnings-perl \
-    libtest2-suite-perl \
     libtool \
-    libtry-tiny-perl \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning == True and gpu_acceleration_name != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3.11-dev \
     python3-pip \
     {% endif -%}
@@ -339,12 +302,11 @@ RUN \
   apt-get clean && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
-    {% if machine_learning == True and gpu_acceleration_name == "openvino" -%}
+    {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/openvino.list \
     /usr/share/keyrings/intel-graphics.gpg \
     {% endif -%}
     /root/.cache \
-    /root/.cpanm \
     /root/.npm \
     /tmp/* \
     /usr/share/keyrings/nodesource.gpg \

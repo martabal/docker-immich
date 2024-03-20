@@ -1,4 +1,4 @@
-name: Run tests
+name: Test suites
 
 on:
   push:
@@ -7,32 +7,60 @@ on:
     branches: ["main"]
 
 jobs:
-  lint-and-format:
+  python-unit-tests:
     name: tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install python formatter
-        run: pip install ruff
+      - name: Install poetry
+        run: pipx install poetry
 
-      - name: Run linter
-        run: ruff check **.py
-
-      - uses: psf/black@stable
+      - name: Setup poetry
+        uses: actions/setup-python@v5
         with:
-          options: "--check --verbose"
+          python-version: 3.11
+          cache: "poetry"
+
+      - name: Install python dependencies
+        run: |
+          poetry install --with dev,test
+
+      - name: Run python linter
+        run: poetry run ruff check .
+        if: ${{ !cancelled() }}
+
+      - name: Run python formatter
+        run: poetry run black --check .
+        if: ${{ !cancelled() }}
+
+      - name: Run tests and coverage
+        run: poetry run pytest render_templates
+        if: ${{ !cancelled() }}
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
-        with:
-          additional_files: 'run'
+
+  format:
+    name: Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install prettier
+        run: |
+          npm i prettier@3.2.5
+
+      - name: Run formatter
+        run: npx prettier --check .
