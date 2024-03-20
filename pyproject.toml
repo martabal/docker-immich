@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "docker-immich"
+version = "0.1.0"
+description = "AIO image for Immich"
+authors = ["martabal <74269598+martabal@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "render_templates"}]
+
+[tool.ruff]
+cache-dir = "~/.cache/ruff"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jinja2 = "^3.1.3"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.2.1"
+black = "^24.2.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

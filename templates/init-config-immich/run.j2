@@ -3,7 +3,7 @@
 
 # make folders
 mkdir -p \
-    {% if machine_learning == True -%}
+    {% if machine_learning_provider -%}
     /config/machine-learning \
     {% endif -%}
     /photos \
