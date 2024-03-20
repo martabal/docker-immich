@@ -28,7 +28,7 @@ RUN \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
-  {% if machine_learning_provider and machine_learning_provider == "openvino" -%}
+  {% if machine_learning_provider == "openvino" -%}
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy/lts/2350 unified" >>/etc/apt/sources.list.d/openvino.list && \
   curl -s https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor | tee /usr/share/keyrings/intel-graphics.gpg >/dev/null && \
   {% endif -%}
@@ -54,14 +54,14 @@ RUN \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3-dev \
     {% endif -%}
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
-    {% if machine_learning_provider and machine_learning_provider == "cuda" -%}
+    {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
     libcudart12 \
@@ -93,13 +93,13 @@ RUN \
     mesa-va-drivers \
     nodejs \
     perl \
-    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3 \
     python3-pip \
     python3-venv \
     {% endif -%}
     zlib1g && \
-  {% if machine_learning_provider and machine_learning_provider == "openvino" -%}
+  {% if machine_learning_provider == "openvino" -%}
   echo "**** install dev-dependencies for python 3.10 ****" && \
   apt-get install --no-install-recommends -y \
     intel-level-zero-gpu \
@@ -289,7 +289,7 @@ RUN \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
     python3-dev \
     python3-pip \
     {% endif -%}
@@ -298,7 +298,7 @@ RUN \
   apt-get clean && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
-    {% if machine_learning_provider and machine_learning_provider == "openvino" -%}
+    {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/openvino.list \
     /usr/share/keyrings/intel-graphics.gpg \
     {% endif -%}
