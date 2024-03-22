@@ -22,7 +22,7 @@ ENV \
   IMMICH_WEB_ROOT="/app/immich/server/www" \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   SERVER_PORT="8080"
-  
+
 # run build
 RUN \
   echo "**** install build packages ****" && \
@@ -54,7 +54,7 @@ RUN \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
     python3.11-dev \
     {% endif -%}
     unzip && \
@@ -95,7 +95,7 @@ RUN \
     mesa-va-drivers \
     nodejs \
     perl \
-    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
     python3.11 \
     python3-pip \
     python3.11-venv \
@@ -262,7 +262,7 @@ RUN \
   done && \
   {% endif -%}
   apt-get remove -y --purge \
-    {% if machine_learning_provider and machine_learning_provider == "openvino" -%}
+    {% if machine_learning_provider == "openvino" -%}
     libbz2-dev \
     libc6-dev \
     libffi-dev \
@@ -293,7 +293,7 @@ RUN \
     libwebp-dev \
     meson \
     pkg-config \
-    {% if machine_learning_provider is not none and machine_learning_provider != "openvino" -%}
+    {% if machine_learning_provider and machine_learning_provider != "openvino" -%}
     python3.11-dev \
     python3-pip \
     {% endif -%}

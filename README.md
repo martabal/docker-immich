@@ -6,7 +6,7 @@
 
 [Immich](https://immich.app/) is a high performance self-hosted photo and video backup solution.
 
-[![immich](https://avatars.githubusercontent.com/u/109746326?s=200&v=4)](https://immich.app/)
+[![immich](./immich-logo.png)](https://immich.app/)
 
 ## What is it ?
 
