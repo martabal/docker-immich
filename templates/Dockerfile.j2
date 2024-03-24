@@ -60,8 +60,6 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-    # until jellyfin-ffmpeg supports noble
-    ffmpeg \
     $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
     {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
@@ -149,16 +147,16 @@ RUN \
     /tmp/immich-dependencies --strip-components=1 && \
   echo "**** build immich dependencies ****" && \
   cd /tmp/immich-dependencies/server/bin && \
-  # FFMPEG_VERSION=$(jq -cr '.packages[] | select(.name == "ffmpeg").version' /tmp/immich-dependencies/server/bin/build-lock.json) && \
-  # TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
-  # curl -o \
-  #   /tmp/ffmpeg.deb -L \
-  #   "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
-  # apt-get install --no-install-recommends -y -f \
-  #   /tmp/ffmpeg.deb && \
-  # ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
-  # ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
-  # ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
+  FFMPEG_VERSION=$(jq -cr '.packages[] | select(.name == "ffmpeg").version' /tmp/immich-dependencies/server/bin/build-lock.json) && \
+  TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
+  curl -o \
+    /tmp/ffmpeg.deb -L \
+    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-noble_${TARGETARCH}.deb" && \
+  apt-get install --no-install-recommends -y -f \
+    /tmp/ffmpeg.deb && \
+  ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
+  ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
+  ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
