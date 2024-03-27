@@ -129,11 +129,11 @@ RUN \
   {% endif -%}
   echo "**** create folders ****" && \
   mkdir -p \
+    /app/immich/cli \
     /app/immich/geodata \
     {% if machine_learning_provider -%}
     /app/immich/machine-learning/ann \
     {% endif -%}
-    /app/immich/server \
     /app/immich/server/www \
     /tmp/immich-dependencies \
     /tmp/immich \
@@ -220,6 +220,17 @@ RUN \
     static \
     /app/immich/server/www && \
   {% if machine_learning_provider -%}
+  echo "**** build CLI ****" && \
+  cd /tmp/immich/cli && \
+  npm ci && \
+  npm run build && \
+  npm prune --omit=dev --omit=optional && \
+  cp -a \
+    package.json \
+    package-lock.json \
+    node_modules \
+    dist \
+    /app/immich/cli && \
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
   {% if machine_learning_provider == "openvino" -%}
