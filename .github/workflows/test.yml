@@ -30,8 +30,7 @@ jobs:
           cache: "poetry"
 
       - name: Install python dependencies
-        run: |
-          poetry install --with dev,test
+        run: poetry install --with dev,test
 
       - name: Run python linter
         run: poetry run ruff check .
@@ -59,8 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install prettier
-        run: |
-          npm i prettier@3.2.5
+        run: npm i prettier@3.2.5
 
       - name: Run formatter
         run: npx prettier --check .
