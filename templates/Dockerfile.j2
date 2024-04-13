@@ -151,7 +151,7 @@ RUN \
   TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
   curl -o \
     /tmp/ffmpeg.deb -L \
-    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-mantic_${TARGETARCH}.deb" && \
+    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-bookworm_${TARGETARCH}.deb" && \
   apt-get install --no-install-recommends -y -f \
     /tmp/ffmpeg.deb && \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
