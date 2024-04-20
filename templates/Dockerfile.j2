@@ -192,16 +192,12 @@ RUN \
   rm -rf node_modules/@img/sharp-linuxmusl-x64 && \
   cp -r \
     node_modules/@img \
-    /tmp && \
-  cp -r \
     node_modules/exiftool-vendored.pl \
     /tmp && \
   npm run build && \
   npm prune --omit=dev --omit=optional && \
   cp -r \
     /tmp/@img \
-    node_modules && \
-  cp -r \
     /tmp/exiftool-vendored.pl \
     node_modules && \
   npm link && \
