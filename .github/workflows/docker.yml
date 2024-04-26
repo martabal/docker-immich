@@ -82,8 +82,25 @@ jobs:
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
 
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup poetry
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          cache: "poetry"
+
+      - name: Install python dependencies
+        run: poetry install --without dev,test
+
       - name: Create Dockerfile from template
-        run: python3 render_templates/main.py --flavor ${{ matrix.image }}
+        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.image }}
 
       - name: Generate docker image tags
         id: metadata

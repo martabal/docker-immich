@@ -6,12 +6,10 @@ mkdir -p \
     {% if machine_learning_provider -%}
     /config/machine-learning \
     {% endif -%}
-    /photos \
-    /run/immich
+    "$IMMICH_MEDIA_LOCATION"
 
 # permissions
-find /photos -maxdepth 0 \( ! -user abc -o ! -group abc \) -exec lsiown -R abc:abc {} \;
+find "$IMMICH_MEDIA_LOCATION" -maxdepth 0 \( ! -user abc -o ! -group abc \) -exec lsiown -R abc:abc {} \;
 find /app/immich -path "*/node_modules" -prune -o -exec chown abc:abc {} +
 lsiown -R abc:abc \
-    /config \
-    /run/immich
+    /config
