@@ -20,16 +20,23 @@ def run_around_tests():
         rmtree(test_folder_path)
 
 
+def test_count_dependencies():
+    assert len(flavors) == 4
+
+
 def test_create_all_dependencies():
     argv = ["--build-path", test_folder_name]
     init(argv)
 
 
 def test_check_folder():
-    argv = []
     for flavor in flavors:
         argv = ["--flavor", flavor["name"], "--build-path", test_folder_name]
-        folder = build_folder_prefix + flavor["name"]
         init(argv)
+        folder = build_folder_prefix + flavor["name"]
         flavor_path = os.path.join(test_folder_path, folder)
+        dockerfile_path = os.path.join(flavor_path, "Dockerfile")
+        root_path = os.path.join(flavor_path, "root")
         assert os.path.exists(flavor_path) is True
+        assert os.path.exists(dockerfile_path) is True
+        assert os.path.exists(root_path) is True
