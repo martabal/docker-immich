@@ -5,9 +5,6 @@ FROM ghcr.io/martabal/baseimage-ubuntu:noble
 # set version label
 ARG BUILD_DATE
 ARG IMMICH_VERSION
-{% if machine_learning_provider -%}
-ARG PYTHON_VERSION={% if machine_learning_provider != "openvino" -%}3.11.9{% else -%}3.10.13{% endif -%}
-{% endif %}
 LABEL build_version="Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
@@ -39,9 +36,6 @@ RUN \
   /tmp/immich-dependencies \
   /tmp/immich \
   /tmp/node_modules && \
-  {% if machine_learning_provider -%}
-  SHORT_PYTHON_VERSION=$(echo $PYTHON_VERSION | sed 's/\([0-9]*\.[0-9]*\).*/\1/') && \
-  {% endif -%}
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
@@ -107,37 +101,24 @@ RUN \
     mesa-va-drivers \
     nodejs \
     perl \
+    {% if machine_learning_provider -%}
+    python3-pip \
+    software-properties-common \
+    {% endif -%}
     zlib1g && \
-  {% if machine_learning_provider -%}
-  {% if machine_learning_provider == "openvino" -%}
-  echo "**** install openvino dependencies ****" && \
+    {% if machine_learning_provider -%}
+  add-apt-repository ppa:deadsnakes/ppa && \
   apt-get install --no-install-recommends -y \
-    intel-level-zero-gpu \
-    intel-opencl-icd \
-    level-zero \
-    ocl-icd-libopencl1 && \
-  {% endif -%}
-  echo "**** install dev-dependencies for python ${SHORT_PYTHON_VERSION} ****" && \
-  apt-get install --no-install-recommends -y \
-    libbz2-dev \
-    libc6-dev \
-    libffi-dev \
-    libgdbm-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    zlib1g-dev && \
-  echo "**** compile python ${SHORT_PYTHON_VERSION} ****" && \
-  mkdir -p /tmp/python && \
-  cd /tmp/python && \
-  curl -o \
-    /tmp/python/Python-"$PYTHON_VERSION".tar.xz -L \
-    "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz" && \
-  tar xf /tmp/python/Python-"$PYTHON_VERSION".tar.xz && \
-  cd /tmp/python/Python-"$PYTHON_VERSION" && \
-  ./configure --with-ensurepip=install --enable-optimizations && \
-  make altinstall && \
-  {% endif -%}
+    {% if machine_learning_provider == "openvino" %}
+    python3.10-dev \
+    python3.10-venv \
+    python3.10 && \
+    {% else -%}
+    python3.11-dev \
+    python3.11-venv \
+    python3.11 && \
+    {% endif -%}
+    {% endif -%}
   echo "**** download immich dependencies ****" && \
   curl -o \
     /tmp/immich-dependencies.tar.gz -L \
@@ -236,10 +217,10 @@ RUN \
     /app/immich/cli && \
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
-  python"$SHORT_PYTHON_VERSION" -m pip install {% if machine_learning_provider != "openvino" -%}--break-system-packages {% endif -%}--disable-pip-version-check -U --no-cache-dir \
+  pip install --break-system-packages --disable-pip-version-check -U --no-cache-dir \
     poetry \
     virtualenv && \
-  python"$SHORT_PYTHON_VERSION" -m venv /lsiopy && \
+  python{% if machine_learning_provider == "openvino" -%}3.10 {% else %}3.11 {% endif -%} -m venv /lsiopy && \
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
   cp -a \
@@ -268,15 +249,16 @@ RUN \
   done && \
   {% endif -%}
   apt-get remove -y --purge \
-    {% if machine_learning_provider == "openvino" -%}
-    libbz2-dev \
-    libc6-dev \
-    libffi-dev \
-    libgdbm-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    zlib1g-dev \
+    {% if machine_learning_provider -%}
+    {% if machine_learning_provider == "openvino" %}
+    python3.10-dev \
+    python3.10-venv \
+    {% else -%}
+    python3.11-dev \
+    python3.11-venv \
+    {% endif -%}
+    python3-pip \
+    software-properties-common \
     {% endif -%}
     autoconf \
     bc \
