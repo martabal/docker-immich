@@ -18,7 +18,7 @@ ruff = "^0.4.1"
 black = "^24.4.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.0.1"
+pytest = "^8.2.0"
 
 [build-system]
 requires = ["poetry-core"]
