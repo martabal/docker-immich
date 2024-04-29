@@ -18,7 +18,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install poetry
         run: pipx install poetry
@@ -26,7 +26,7 @@ jobs:
       - name: Setup poetry
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
           cache: "poetry"
 
       - name: Install python dependencies
