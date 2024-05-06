@@ -8,8 +8,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    groups:
-      dev:
-        dependency-type: "development"
-      prod:
-        dependency-type: "production"

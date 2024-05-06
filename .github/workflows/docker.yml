@@ -14,6 +14,10 @@ on:
   schedule:
     - cron: "0 12 * * 3"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   packages: write
 
@@ -137,7 +141,7 @@ jobs:
           context: build-${{ matrix.image }}
           provenance: false # prevent unknown architecture
           platforms: ${{ matrix.platforms }}
-          push: true
+          push: ${{ !github.event.pull_request.head.repo.fork }}
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
           build-args: |
