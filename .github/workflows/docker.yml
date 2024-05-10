@@ -104,7 +104,7 @@ jobs:
         run: poetry install --without dev,test
 
       - name: Create Dockerfile from template
-        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.image }}
+        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.image }} --print
 
       - name: Generate docker image tags
         id: metadata

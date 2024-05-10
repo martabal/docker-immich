@@ -29,6 +29,17 @@ def test_create_all_dependencies():
     init(argv)
 
 
+def test_wrong_args():
+    with pytest.raises(SystemExit) as e:
+        argv = ["-n"]
+        init(argv)
+    assert e.type == SystemExit
+    with pytest.raises(SystemExit) as e:
+        argv = ["-n", "--flavor", flavors[0]["name"]]
+        init(argv)
+    assert e.type == SystemExit
+
+
 def test_check_folder():
     for flavor in flavors:
         argv = ["--flavor", flavor["name"], "--build-path", test_folder_name]

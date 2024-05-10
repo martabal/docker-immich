@@ -49,8 +49,13 @@ subfolders_templates_run = [
 ]
 
 
-def generate_all(build_path: Optional[str] = None) -> None:
-    print("generating Dockerfiles and context for all flavors: ")
+def generate_all(
+    build_path: Optional[str] = None,
+    print_content: Optional[bool] = None,
+    no_generate: Optional[bool] = None,
+) -> None:
+    if no_generate is False:
+        print("generating Dockerfiles and context for all flavors: ")
     for flavor in flavors:
         build_folder_name = build_folder_prefix + flavor["name"]
         if build_path:
@@ -59,10 +64,14 @@ def generate_all(build_path: Optional[str] = None) -> None:
         else:
             build_folder = os.path.join(output_dir, build_folder_name)
 
-        generate_template(
-            build_folder,
-            flavor,
-        )
+        if no_generate is False:
+            generate_template(
+                build_folder,
+                flavor,
+            )
+        if print_content is True:
+            dockerfile_path = os.path.join(build_folder, "Dockerfile")
+            print_dockerfile_content(dockerfile_path)
 
 
 def generate_template(
@@ -133,6 +142,12 @@ def get_flavor_by_name(flavor_name: str) -> Optional[Flavor]:
     return None
 
 
+def print_dockerfile_content(dockerfile_path: str) -> None:
+    print("\nDockerfile generated")
+    with open(dockerfile_path, "r") as f:
+        print(f.read())
+
+
 def init(argv: Optional[List[str]] = None):
     if argv is None:
         args = sys.argv
@@ -144,6 +159,7 @@ def init(argv: Optional[List[str]] = None):
         "--build-path",
         help="Specify the build path",
         type=str,
+        required=False,
     )
     parser.add_argument(
         "-f",
@@ -151,9 +167,26 @@ def init(argv: Optional[List[str]] = None):
         help="Specify the flavor",
         type=str,
         choices=[flavor["name"] for flavor in flavors],
+        required=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--print",
+        help="Show the generated Dockerfiles",
+        action="store_true",
+        required=False,
+    )
+    parser.add_argument(
+        "-n",
+        "--no-generate",
+        help="Do not generate the generate Dockerfile(s)",
+        action="store_true",
+        required=False,
     )
 
     args = parser.parse_args(argv)
+    if args.print is False and args.no_generate is True:
+        parser.error("You can't have --no-generate without --print")
 
     if args.flavor is not None:
         flavor = get_flavor_by_name(args.flavor)
@@ -168,13 +201,18 @@ def init(argv: Optional[List[str]] = None):
         else:
             build_folder = os.path.join(output_dir, build_folder_name)
         print(f"generating Dockerfiles and context for {flavor_name}: ")
-        generate_template(
-            build_folder,
-            flavor,
-        )
+
+        if args.no_generate is False:
+            generate_template(
+                build_folder,
+                flavor,
+            )
+        if args.print is True:
+            dockerfile_path = os.path.join(build_folder, "Dockerfile")
+            print_dockerfile_content(dockerfile_path)
 
     else:
-        generate_all(args.build_path)
+        generate_all(args.build_path, args.print, args.no_generate)
 
 
 if __name__ == "__main__":
