@@ -13,6 +13,10 @@ ENV \
   {% if machine_learning_provider -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
+  {% if machine_learning_provider == "openvino" -%}
+  NEOReadDebugKeys="1" \
+  OverrideGpuAddressSpace="48" \
+  {% endif -%}
   TRANSFORMERS_CACHE="/config/machine-learning" \
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
