@@ -74,6 +74,23 @@ docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all
 docker run --gpus=all ...
 ```
 
+or
+
+```yaml
+services:
+  immich:
+    image: ghcr.io/martabal/immich:latest
+    ...
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+```
+
 ### Machine-learning acceleration
 
 #### Intel - OpenVINO
@@ -86,6 +103,22 @@ To use OpenVINO:
 
 ```bash
 docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
+```
+
+or
+
+```yaml
+services:
+  immich:
+    image: ghcr.io/martabal/immich:latest
+    ...
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      ...
+      - /dev/bus/usb:/dev/bus/usb
 ```
 
 #### Nvidia - CUDA
@@ -104,8 +137,6 @@ Example snippets to start creating a container:
 ### Docker Compose
 
 ```yaml
----
-version: "2.1"
 services:
   immich:
     image: ghcr.io/martabal/immich:latest
@@ -230,7 +261,7 @@ To configure the container, pass variables at runtime using the format `<externa
 
 ## Umask for running applications
 
-The image allow overriding the default umask setting for services started within the containers using the optional -e UMASK=022 option. Note that umask works differently than chmod and subtracts permissions based on its value, not adding. For more information, please refer to the Wikipedia article on umask [here](https://en.wikipedia.org/wiki/Umask).
+The image allow overriding the default umask setting for services started within the containers using the optional `-e UMASK=022` option. Note that umask works differently than chmod and subtracts permissions based on its value, not adding. For more information, please refer to the Wikipedia article on umask [here](https://en.wikipedia.org/wiki/Umask).
 
 ## User / Group Identifiers
 
