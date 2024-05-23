@@ -47,49 +47,79 @@ To use a SSL connection to your PostgreSQL database, include a PostgreSQL URL in
 
 To use Intel Quicksync hardware acceleration:
 
-1. Ensure your container has access to the `/dev/dri` video device.
-2. Add the device to your container by including the following option in your Docker run command:
+- Ensure your container has access to the `/dev/dri` video device.
 
-```bash
-docker run --device=/dev/dri:/dev/dri ...
-```
+- Add the device to your container by including the following option in your Docker run command:
+
+  - Docker run:
+
+    ```bash
+    docker run --device=/dev/dri:/dev/dri ...
+    ```
+
+  - Docker compose:
+
+  ```yaml
+  services:
+    immich:
+      image: ghcr.io/martabal/immich:latest
+      ...
+      devices:
+      - "/dev/dri:/dev/dri"
+  ```
 
 ### Nvidia - NVENC/VAAPI
 
 To use Nvidia hardware acceleration:
 
-1. First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](<https://github.com/NVIDIA/> nvidia-docker).
+- First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](<https://github.com/NVIDIA/> nvidia-docker).
 
-2. After installing `nvidia-docker2`, recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
+- After installing `nvidia-docker2`, recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
 
 - Add both `--runtime=nvidia` and `NVIDIA_VISIBLE_DEVICES=all` to your Docker run command. Replace `all` with a specific GPU's UUID if needed. Example:
 
-```bash
-docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all
-```
+  - Docker run:
+
+    ```bash
+    docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all
+    ```
+
+  - Docker compose:
+
+  ```yaml
+  services:
+    immich:
+      image: ghcr.io/martabal/immich:latest
+      ...
+      runtime: nvidia
+      environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+  ```
 
 - Alternatively, use `--gpus=all` in your Docker run command. Example:
 
-```bash
-docker run --gpus=all ...
-```
+  - Docker run:
 
-or
+    ```bash
+    docker run --gpus=all ...
+    ```
 
-```yaml
-services:
-  immich:
-    image: ghcr.io/martabal/immich:latest
-    ...
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities:
-                - gpu
-```
+  - Docker compose:
+
+  ```yaml
+  services:
+    immich:
+      image: ghcr.io/martabal/immich:latest
+      ...
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities:
+                  - gpu
+  ```
 
 ### Machine-learning acceleration
 
@@ -97,29 +127,31 @@ services:
 
 To use OpenVINO:
 
-1. Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
+- Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
 
-2. Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'` in your Docker run command. Example:
+- Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'` in your Docker run command. Example:
 
-```bash
-docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
-```
+  - Docker run:
 
-or
+    ```bash
+    docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
+    ```
 
-```yaml
-services:
-  immich:
-    image: ghcr.io/martabal/immich:latest
-    ...
-    device_cgroup_rules:
-      - 'c 189:* rmw'
-    devices:
-      - /dev/dri:/dev/dri
-    volumes:
+  - Docker compose:
+
+  ```yaml
+  services:
+    immich:
+      image: ghcr.io/martabal/immich:latest
       ...
-      - /dev/bus/usb:/dev/bus/usb
-```
+      device_cgroup_rules:
+        - 'c 189:* rmw'
+      devices:
+        - /dev/dri:/dev/dri
+      volumes:
+        ...
+        - /dev/bus/usb:/dev/bus/usb
+  ```
 
 #### Nvidia - CUDA
 
