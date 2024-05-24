@@ -49,15 +49,15 @@ To use Intel Quicksync hardware acceleration:
 
 - Ensure your container has access to the `/dev/dri` video device.
 
-- Add the device to your container by including the following option in your Docker run command:
+- Add the device to your container by including the following option:
 
-  - Docker run:
+  - Docker CLI:
 
     ```bash
     docker run --device=/dev/dri:/dev/dri ...
     ```
 
-  - Docker compose:
+  - Docker Compose:
 
   ```yaml
   services:
@@ -76,15 +76,15 @@ To use Nvidia hardware acceleration:
 
 - After installing `nvidia-docker2`, recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
 
-- Add both `--runtime=nvidia` and `NVIDIA_VISIBLE_DEVICES=all` to your Docker run command. Replace `all` with a specific GPU's UUID if needed. Example:
+- Add both `--runtime=nvidia` and `NVIDIA_VISIBLE_DEVICES=all` to your Docker run command. Replace `all` with a specific GPU's UUID if needed:
 
-  - Docker run:
+  - Docker CLI:
 
     ```bash
     docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all
     ```
 
-  - Docker compose:
+  - Docker Compose:
 
   ```yaml
   services:
@@ -97,15 +97,15 @@ To use Nvidia hardware acceleration:
         - NVIDIA_VISIBLE_DEVICES=all
   ```
 
-- Alternatively, use `--gpus=all` in your Docker run command. Example:
+- Alternatively, use `--gpus=all`:
 
-  - Docker run:
+  - Docker CLI:
 
     ```bash
     docker run --gpus=all ...
     ```
 
-  - Docker compose:
+  - Docker Compose:
 
   ```yaml
   services:
@@ -130,15 +130,15 @@ To use OpenVINO:
 
 - Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
 
-- Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'` in your Docker run command. Example:
+- Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'`:
 
-  - Docker run:
+  - Docker CLI:
 
     ```bash
     docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
     ```
 
-  - Docker compose:
+  - Docker Compose:
 
   ```yaml
   services:
