@@ -46,10 +46,6 @@ RUN \
   {% if machine_learning_provider -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
-  {% if machine_learning_provider == "openvino" -%}
-  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy/lts/2350 unified" >>/etc/apt/sources.list.d/openvino.list && \
-  curl -s "https://repositories.intel.com/gpu/intel-graphics.key" | gpg --dearmor | tee /usr/share/keyrings/intel-graphics.gpg >/dev/null && \
-  {% endif -%}
   {% endif -%}
   apt-get update && \
   apt-get install --no-install-recommends -y \
@@ -293,10 +289,6 @@ RUN \
     {% if machine_learning_provider -%}
     /etc/apt/sources.list.d/deadsnakes.list \
     /usr/share/keyrings/deadsnakes.gpg \
-    {% if machine_learning_provider == "openvino" -%}
-    /etc/apt/sources.list.d/openvino.list \
-    /usr/share/keyrings/intel-graphics.gpg \
-    {% endif -%}
     {% endif -%}
     /root/.cache \
     /root/.npm \

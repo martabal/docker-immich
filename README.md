@@ -65,7 +65,7 @@ To use Intel Quicksync hardware acceleration:
       image: ghcr.io/martabal/immich:latest
       ...
       devices:
-      - "/dev/dri:/dev/dri"
+        - "/dev/dri:/dev/dri"
   ```
 
 ### Nvidia - NVENC/VAAPI
@@ -93,7 +93,8 @@ To use Nvidia hardware acceleration:
       ...
       runtime: nvidia
       environment:
-      - NVIDIA_VISIBLE_DEVICES=all
+        ...
+        - NVIDIA_VISIBLE_DEVICES=all
   ```
 
 - Alternatively, use `--gpus=all` in your Docker run command. Example:
