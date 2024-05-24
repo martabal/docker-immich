@@ -76,7 +76,7 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
+    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi) \
     {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
