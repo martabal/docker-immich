@@ -32,7 +32,7 @@ ENV \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # run build
-# hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %}
+# hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %},SC2046
 RUN \
   echo "**** create folders ****" && \
   mkdir -p \
@@ -70,7 +70,7 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-    "$(if [ "$(arch)" = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi)" \
+    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi) \
     {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
