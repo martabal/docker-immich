@@ -5,6 +5,8 @@ FROM ghcr.io/martabal/baseimage-ubuntu:noble
 # set version label
 ARG BUILD_DATE
 ARG IMMICH_VERSION
+
+# hadolint ignore=DL3048
 LABEL build_version="Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
@@ -27,19 +29,15 @@ ENV \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   SERVER_PORT="8080"
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # run build
+# hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %}
 RUN \
   echo "**** create folders ****" && \
   mkdir -p \
-  /app/immich/cli \
-  /app/immich/geodata \
-  {% if machine_learning_provider -%}
-  /app/immich/machine-learning/ann \
-  {% endif -%}
-  /app/immich/server/www \
-  /tmp/immich-dependencies \
-  /tmp/immich \
-  /tmp/node_modules && \
+    /app/immich/{cli,geodata,{% if machine_learning_provider -%}machine-learning/ann,{% endif -%}server/www} \
+    /tmp/{immich-dependencies,immich,node_modules} && \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
@@ -72,7 +70,7 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi) \
+    "$(if [ "$(arch)" = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi)" \
     {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \

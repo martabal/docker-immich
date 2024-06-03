@@ -51,11 +51,75 @@ jobs:
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ["classic", "noml", "cuda", "noml"]
+
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup poetry
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+          cache: "poetry"
+
+      - name: Install python dependencies
+        run: poetry install --without dev,test
+
+      - name: Create Dockerfile from template
+        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.flavor }}
+
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: build-${{ matrix.flavor }}
+          additional_files: "run"
+
+  hadolint:
+    name: Hadolint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ["classic", "noml", "cuda", "noml"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup poetry
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+          cache: "poetry"
+
+      - name: Install python dependencies
+        run: poetry install --without dev,test
+
+      - name: Create Dockerfile from template
+        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.flavor }}
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: build-${{ matrix.flavor }}/Dockerfile
 
   format:
     name: Prettier
