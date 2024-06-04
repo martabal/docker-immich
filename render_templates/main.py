@@ -171,7 +171,7 @@ def init(argv: Optional[List[str]] = None):
     )
     parser.add_argument(
         "-p",
-        "--print",
+        "--print-dockerfile",
         help="Show the generated Dockerfiles",
         action="store_true",
         required=False,
@@ -185,8 +185,8 @@ def init(argv: Optional[List[str]] = None):
     )
 
     args = parser.parse_args(argv)
-    if args.print is False and args.no_generate is True:
-        parser.error("You can't have --no-generate without --print")
+    if args.print_dockerfile is False and args.no_generate is True:
+        parser.error("You can't have --no-generate without --print-dockerfile")
 
     if args.flavor is not None:
         flavor = get_flavor_by_name(args.flavor)
@@ -207,12 +207,12 @@ def init(argv: Optional[List[str]] = None):
                 build_folder,
                 flavor,
             )
-        if args.print is True:
+        if args.print_dockerfile is True:
             dockerfile_path = os.path.join(build_folder, "Dockerfile")
             print_dockerfile_content(dockerfile_path)
 
     else:
-        generate_all(args.build_path, args.print, args.no_generate)
+        generate_all(args.build_path, args.print_dockerfile, args.no_generate)
 
 
 if __name__ == "__main__":

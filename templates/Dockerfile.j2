@@ -107,7 +107,7 @@ RUN \
     perl \
     {% if machine_learning_provider -%}
     python3-pip \
-    {% if machine_learning_provider == "openvino" %}
+    {% if machine_learning_provider == "openvino" -%}
     python3.10-dev \
     python3.10-venv \
     python3.10 \
@@ -205,7 +205,7 @@ RUN \
   {% if machine_learning_provider -%}
   echo "**** build CLI ****" && \
   cd /tmp/immich/cli && \
-  npm ci && \
+  npm ci --no-fund --no-update-notifier && \
   npm run build && \
   npm prune --omit=dev --omit=optional && \
   cp -a \
@@ -249,7 +249,7 @@ RUN \
   {% endif -%}
   apt-get remove -y --purge \
     {% if machine_learning_provider -%}
-    {% if machine_learning_provider == "openvino" %}
+    {% if machine_learning_provider == "openvino" -%}
     python3.10-dev \
     python3.10-venv \
     {% else -%}

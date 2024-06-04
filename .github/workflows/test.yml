@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   python-unit-tests:
-    name: tests
+    name: Tests renderer
     runs-on: ubuntu-latest
 
     steps:
@@ -48,50 +48,13 @@ jobs:
         run: poetry run pytest render_templates
         if: ${{ !cancelled() }}
 
-  shellcheck:
-    name: ShellCheck
+  Linter:
+    name: Run linters
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        flavor: ["classic", "noml", "cuda", "noml"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Setup poetry
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-          cache: "poetry"
-
-      - name: Install python dependencies
-        run: poetry install --without dev,test
-
-      - name: Create Dockerfile from template
-        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.flavor }}
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: build-${{ matrix.flavor }}
-          additional_files: "run"
-
-  hadolint:
-    name: Hadolint
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        flavor: ["classic", "noml", "cuda", "noml"]
+        flavor: ["classic", "cuda", "noml", "openvino"]
 
     steps:
       - uses: actions/checkout@v4
@@ -118,8 +81,29 @@ jobs:
 
       - name: Run Hadolint
         uses: hadolint/hadolint-action@v3.1.0
+        if: ${{ !cancelled() }}
         with:
           dockerfile: build-${{ matrix.flavor }}/Dockerfile
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        if: ${{ !cancelled() }}
+        with:
+          scandir: build-${{ matrix.flavor }}
+          additional_files: "run"
+
+      - name: Check Permissions
+        if: ${{ !cancelled() }}
+        run: |
+          WRONG_PERM=$(find ./build-${{ matrix.flavor }}  -path "./.git" -prune -o \( -name "run" -o -name "finish" -o -name "check" \) -not -perm -u=x,g=x,o=x -print)
+          if [ -n "${WRONG_PERM}" ]; then
+            for i in ${WRONG_PERM}; do
+              echo "::error file=${i},line=1,title=Missing Executable Bit::This file needs to be set as executable!"
+            done
+            exit 1
+          else
+            echo "**** All perms look good ****"
+          fi
 
   format:
     name: Prettier
