@@ -25,8 +25,8 @@ ENV \
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
   IMMICH_MEDIA_LOCATION="/photos" \
-  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
   IMMICH_PORT="8080" \
+  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
   IMMICH_WEB_ROOT="/app/immich/server/www" \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
 
@@ -166,6 +166,11 @@ RUN \
   tar xf \
     /tmp/immich.tar.gz -C \
     /tmp/immich --strip-components=1 && \
+  echo "**** copy scripts ****" && \
+  cd /tmp/immich/docker && \
+  cp -r \
+    scripts \
+    /app/immich/server && \
   echo "**** build server ****" && \
   cd /tmp/immich/server && \
   npm ci --no-fund --no-update-notifier && \
