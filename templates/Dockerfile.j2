@@ -12,6 +12,7 @@ LABEL maintainer="martabal"
 
 # environment settings
 ENV \
+  IMMICH_ENV="production" \
   {% if machine_learning_provider -%}
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
@@ -24,10 +25,10 @@ ENV \
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
   IMMICH_MEDIA_LOCATION="/photos" \
+  IMMICH_PORT="8080" \
   IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
   IMMICH_WEB_ROOT="/app/immich/server/www" \
-  NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
-  SERVER_PORT="8080"
+  NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -165,6 +166,11 @@ RUN \
   tar xf \
     /tmp/immich.tar.gz -C \
     /tmp/immich --strip-components=1 && \
+  echo "**** copy scripts ****" && \
+  cd /tmp/immich/docker && \
+  cp -r \
+    scripts \
+    /app/immich/server && \
   echo "**** build server ****" && \
   cd /tmp/immich/server && \
   npm ci --no-fund --no-update-notifier && \
