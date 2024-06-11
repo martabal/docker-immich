@@ -14,6 +14,7 @@ LABEL maintainer="martabal"
 ENV \
   IMMICH_ENV="production" \
   {% if machine_learning_provider -%}
+  DEVICE="{{ machine_learning_provider }}" \
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
   {% if machine_learning_provider == "openvino" -%}
@@ -37,8 +38,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN \
   echo "**** create folders ****" && \
   mkdir -p \
-    /app/immich/{cli,geodata,{% if machine_learning_provider -%}machine-learning/ann,{% endif -%}server/www} \
-    /tmp/{immich-dependencies,immich,node_modules} && \
+    {% if machine_learning_provider == "armnn" -%}
+    /etc/OpenCL/vendors \
+    {% endif -%}
+    /app/immich/{cli,geodata,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
+    /tmp/{immich-dependencies,immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
@@ -101,6 +105,10 @@ RUN \
     libwebp7 \
     libwebpdemux2 \
     libwebpmux3 \
+    {% if machine_learning_provider == "armnn" -%}
+    mesa-opencl-icd \
+    ocl-icd-libopencl1 \
+    {% endif -%}
     mesa-utils \
     mesa-va-drivers \
     mesa-vulkan-drivers \
@@ -207,7 +215,6 @@ RUN \
     build/* \
     static \
     /app/immich/server/www && \
-  {% if machine_learning_provider -%}
   echo "**** build CLI ****" && \
   cd /tmp/immich/cli && \
   npm ci --no-fund --no-update-notifier && \
@@ -219,9 +226,10 @@ RUN \
     node_modules \
     dist \
     /app/immich/cli && \
+  {% if machine_learning_provider -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
-  pip install --break-system-packages --disable-pip-version-check -U --no-cache-dir \
+  pip install --no-compile --break-system-packages --disable-pip-version-check -U --no-cache-dir \
     poetry \
     virtualenv && \
   python{% if machine_learning_provider == "openvino" -%}3.10 {% else %}3.11 {% endif -%} -m venv /lsiopy && \
@@ -236,6 +244,25 @@ RUN \
   cp -a \
     ann/ann.py \
     /app/immich/machine-learning/ann && \
+  {% if machine_learning_provider == "armnn" -%}
+  curl -o \
+    /tmp/armnn.tar.gz -L \
+    "https://github.com/ARM-software/armnn/releases/download/v23.11/ArmNN-linux-aarch64.tar.gz" && \
+  tar xf \
+    /tmp/armnn.tar.gz -C \
+    /tmp/armnn && \
+  cd /tmp/immich/machine-learning/ann && \
+  ARMNN_PATH=/tmp/armnn sh build.sh && \
+  cp \
+    /tmp/armnn/{libarmnn.so.??,libarmnnOnnxParser.so.??,libarmnnDeserializer.so.??,libarmnnTfLiteParser.so.??,libprotobuf.so.?.??.?.?} \
+    /tmp/immich/machine-learning/ann/libann.so \
+    /app/immich/armnn/ && \
+  echo "/usr/lib/libmali.so" > /etc/OpenCL/vendors/mali.icd && \
+  cd /tmp/immich/machine-learning && \
+  {% endif -%}
+  echo "hard core 0" >> /etc/security/limits.conf && \
+  echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
+  echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
   {% if machine_learning_provider == "openvino" -%}
   poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.3.0 && \
   {% elif machine_learning_provider == "cuda" -%}
@@ -247,11 +274,6 @@ RUN \
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if machine_learning_provider == "cuda" %}cuda{% elif machine_learning_provider == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
   echo "**** cleanup ****" && \
-  {% if machine_learning_provider -%}
-  for cleanfiles in *.pyc *.pyo; do \
-    find /usr/local/lib/python3.* /usr/lib/python3.* /lsiopy/lib/python3.* -name "${cleanfiles}" -delete; \
-  done && \
-  {% endif -%}
   apt-get remove -y --purge \
     {% if machine_learning_provider -%}
     {% if machine_learning_provider == "openvino" -%}

@@ -7,9 +7,14 @@
 # stop machine learning from starting
 [[ "${DISABLE_MACHINE_LEARNING}" == "true" || "${IMMICH_MACHINE_LEARNING_URL}" != "http://127.0.0.1:3003" ]] && tail -f /dev/null
 
-{% if machine_learning_provider and machine_learning_provider != "openvino" -%}
+{% if machine_learning_provider -%}
+{% if machine_learning_provider != "openvino" -%}
 lib_path="/usr/lib/$(arch)-linux-gnu/libmimalloc.so.2"
 export LD_PRELOAD="$lib_path"
+{% endif -%}
+{% if machine_learning_provider == "armnn" -%}
+LD_LIBRARY_PATH="/app/immich/armnn"
+{% endif -%}
 {% endif -%}
 export MPLCONFIGDIR="/tmp"
 export HF_HOME="/tmp"

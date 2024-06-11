@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: ["classic", "cuda", "noml", "openvino"]
+        flavor: ["armnn", "cpu", "cuda", "noml", "openvino"]
 
     steps:
       - uses: actions/checkout@v4
