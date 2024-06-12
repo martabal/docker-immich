@@ -10,5 +10,5 @@ updates:
       interval: "weekly"
     groups:
       dev-dependencies:
-        patterns: 
+        patterns:
           - "*"

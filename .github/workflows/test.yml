@@ -109,6 +109,9 @@ jobs:
     name: Prettier
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Install prettier
         run: npm i prettier@3.3.1
 

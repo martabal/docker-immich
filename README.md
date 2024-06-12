@@ -73,9 +73,9 @@ To use Intel Quicksync hardware acceleration:
 
 To use Nvidia hardware acceleration:
 
-- First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](<https://github.com/NVIDIA/> nvidia-docker).
+- First, install the Nvidia container runtime on your host machine. Follow the [installation instructions here](https://github.com/NVIDIA/nvidia-docker).
 
-- After installing `nvidia-docker2`, recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
+- Recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
 
 - Add both `--runtime=nvidia` and `NVIDIA_VISIBLE_DEVICES=all` to your Docker run command. Replace `all` with a specific GPU's UUID if needed:
 
@@ -127,58 +127,52 @@ To use Nvidia hardware acceleration:
 
 #### Arm Cortex-A CPUs and Arm Mali GPUs - Arm NN
 
-- Add:
+- Docker CLI:
 
-  - Docker CLI:
-
-    ```bash
-    docker run --device=/dev/mali0:/dev/mali0 -p /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro -p /usr/lib/libmali.so:/usr/lib/libmali.so:ro ...
-    ```
-
-  - Docker Compose:
-
-  ```yaml
-  services:
-    immich:
-      image: ghcr.io/martabal/immich:latest
-      ...
-      devices:
-        - /dev/mali0:/dev/mali0
-      volumes:
-        ...
-        - /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro
-        - /usr/lib/libmali.so:/usr/lib/libmali.so:ro
+  ```bash
+  docker run --device=/dev/mali0:/dev/mali0 -p /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro -p /usr/lib/libmali.so:/usr/lib/libmali.so:ro ...
   ```
+
+- Docker Compose:
+
+```yaml
+services:
+  immich:
+    image: ghcr.io/martabal/immich:latest
+    ...
+    devices:
+      - /dev/mali0:/dev/mali0
+    volumes:
+      ...
+      - /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro
+      - /usr/lib/libmali.so:/usr/lib/libmali.so:ro
+```
 
 #### Intel - OpenVINO
 
-To use OpenVINO:
-
 - Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
 
-- Add:
+- Docker CLI:
 
-  - Docker CLI:
-
-    ```bash
-    docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
-    ```
-
-  - Docker Compose:
-
-  ```yaml
-  services:
-    immich:
-      image: ghcr.io/martabal/immich:latest
-      ...
-      device_cgroup_rules:
-        - 'c 189:* rmw'
-      devices:
-        - /dev/dri:/dev/dri
-      volumes:
-        ...
-        - /dev/bus/usb:/dev/bus/usb
+  ```bash
+  docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
   ```
+
+- Docker Compose:
+
+```yaml
+services:
+  immich:
+    image: ghcr.io/martabal/immich:latest
+    ...
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      ...
+      - /dev/bus/usb:/dev/bus/usb
+```
 
 #### Nvidia - CUDA
 
