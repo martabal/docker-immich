@@ -30,20 +30,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: openvino
-            platforms: linux/amd64
-            suffix: -openvino
+          - image: armnn
+            platforms: linux/arm64
+            suffix: -armnn
 
           - image: cuda
             platforms: linux/amd64
             suffix: -cuda
 
-          - image: classic
+          - image: cpu
             platforms: linux/amd64,linux/arm64
 
           - image: noml
             platforms: linux/amd64,linux/arm64
             suffix: -noml
+
+          - image: openvino
+            platforms: linux/amd64
+            suffix: -openvino
 
     steps:
       - name: Checkout code
@@ -117,7 +121,7 @@ jobs:
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}
             type=ref,event=pr,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name == 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.immich_version }}-${{ steps.tags.outputs.commit }}
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
-            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'classic' && github.event_name != 'pull_request' }}
+            type=raw,value=${{ matrix.image }},enable=${{ matrix.image != 'cpu' && github.event_name != 'pull_request' }}
             type=raw,value=${{ steps.tags.outputs.short_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}

@@ -15,20 +15,24 @@ class Flavor(TypedDict):
 
 flavors: List[Flavor] = [
     {
+        "name": "armnn",
+        "machine_learning_provider": "armnn",
+    },
+    {
+        "name": "cpu",
+        "machine_learning_provider": "cpu",
+    },
+    {
         "name": "cuda",
         "machine_learning_provider": "cuda",
     },
     {
-        "name": "openvino",
-        "machine_learning_provider": "openvino",
-    },
-    {
-        "name": "classic",
-        "machine_learning_provider": "cpu",
-    },
-    {
         "name": "noml",
         "machine_learning_provider": None,
+    },
+    {
+        "name": "openvino",
+        "machine_learning_provider": "openvino",
     },
 ]
 dockerfile_template_name = "Dockerfile.j2"

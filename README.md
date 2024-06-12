@@ -29,9 +29,10 @@ This image offers different versions via tags. Be cautious when using unstable o
 |   Tag    | Available | Description                                                                                                                               |
 | :------: | :-------: | ----------------------------------------------------------------------------------------------------------------------------------------- |
 |  latest  |    ✅     | Latest Immich release with an Ubuntu base.                                                                                                |
-| openvino |    ✅     | Latest Immich release with an Ubuntu base and support for openvino for machine-learning acceleration.                                     |
+|  armnn   |    ✅     | Latest Immich release with an Ubuntu base and support for Arm Cortex-A CPUs and Arm Mali GPUs for machine-learning acceleration.          |
 |   cuda   |    ✅     | Latest Immich release with an Ubuntu base and support for cuda for machine-learning acceleration.                                         |
 |   noml   |    ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration. |
+| openvino |    ✅     | Latest Immich release with an Ubuntu base and support for openvino for machine-learning acceleration.                                     |
 
 ## Application Setup
 
@@ -124,13 +125,38 @@ To use Nvidia hardware acceleration:
 
 ### Machine-learning acceleration
 
+#### Arm Cortex-A CPUs and Arm Mali GPUs - Arm NN
+
+- Add:
+
+  - Docker CLI:
+
+    ```bash
+    docker run --device=/dev/mali0:/dev/mali0 -p /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro -p /usr/lib/libmali.so:/usr/lib/libmali.so:ro ...
+    ```
+
+  - Docker Compose:
+
+  ```yaml
+  services:
+    immich:
+      image: ghcr.io/martabal/immich:latest
+      ...
+      devices:
+        - /dev/mali0:/dev/mali0
+      volumes:
+        ...
+        - /lib/firmware/mali_csffw.bin:/lib/firmware/mali_csffw.bin:ro
+        - /usr/lib/libmali.so:/usr/lib/libmali.so:ro
+  ```
+
 #### Intel - OpenVINO
 
 To use OpenVINO:
 
 - Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
 
-- Add a new path `-p /dev/bus/usb:/dev/bus/usb` and add `--device=/dev/dri --device-cgroup-rule='c 189:* rmw'`:
+- Add:
 
   - Docker CLI:
 
