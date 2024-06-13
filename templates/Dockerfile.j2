@@ -75,7 +75,6 @@ RUN \
     unzip && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
-    $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free intel-opencl-icd"; fi) \
     {% if machine_learning_provider == "cuda" -%}
     libcublas12 \
     libcublaslt12 \
@@ -127,6 +126,20 @@ RUN \
     {% endif -%}
     {% endif -%}
     zlib1g && \
+  if [ $(arch) = "x86_64" ]; then \
+    echo "**** install intel dependencies ****" && \
+    apt-get install --no-install-recommends -y \
+      intel-media-va-driver-non-free \
+      ocl-icd-libopencl1 && \
+    INTEL_DEPENDENCIES=$(curl -sX GET "https://api.github.com/repos/intel/compute-runtime/releases/latest" | jq -r '.body' | grep wget | grep -v .sum | grep -v .ddeb | sed 's|wget ||g') && \
+    mkdir -p /tmp/intel && \
+    for i in $INTEL_DEPENDENCIES; do \
+      curl -fS --retry 3 --retry-connrefused -o \
+        /tmp/intel/$(basename "${i%$'\r'}") -L \
+        "${i%$'\r'}"; \
+    done && \
+    dpkg -i /tmp/intel/*.deb; \
+  fi && \
   echo "**** download immich dependencies ****" && \
   curl -o \
     /tmp/immich-dependencies.tar.gz -L \
