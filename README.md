@@ -168,10 +168,10 @@ services:
 
 For Nvidia GPUs with Nvidia/CUDA hardware acceleration, use the same commands used for video transcoding.
 
-## Import your existing libraries into Immich
+## Add your existing libraries into Immich
 
-- Mount your existing library folder to `/import`
-- In your administration settings, go to "External Libraries", add a library owner, and set the import paths starting (it must start with `/import`)
+- Mount your existing library folder to `/libraries/<your-library>`
+- In your administration settings, go to "External Libraries", add a library owner, and set the paths for your libraries (it must start with `/libraries/<your-library>`)
 
 ## Usage
 
@@ -203,7 +203,7 @@ services:
     volumes:
       - path_to_appdata:/config
       - path_to_photos:/photos
-      - path_to_imports:/import:ro #optional
+      - path_to_libraries:/libraries #optional
     ports:
       - 8080:8080
     restart: unless-stopped
@@ -252,7 +252,7 @@ docker run -d \
   -p 8080:8080 \
   -v path_to_appdata:/config \
   -v path_to_photos:/photos \
-  -v path_to_imports:/import:ro `#optional` \
+  -v path_to_libraries:/libraries `#optional` \
   --restart unless-stopped \
   ghcr.io/martabal/immich:latest
 
@@ -300,7 +300,7 @@ To configure the container, pass variables at runtime using the format `<externa
 | `-e MACHINE_LEARNING_WORKER_TIMEOUT=120` | Machine learning worker timeout                                                                                |
 |               `-v /config`               | Contains machine learning models (~1.5GB with default models)                                                  |
 |               `-v /photos`               | Contains all the photos uploaded to Immich                                                                     |
-|             `-v /import:ro`              | This folder will be periodically scanned, contents will be automatically imported into Immich                  |
+|             `-v /libraries`              | Contains all your already existing medias                                                                      |
 
 ## Umask for running applications
 
