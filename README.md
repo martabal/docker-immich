@@ -12,27 +12,17 @@
 
 This repo is a fork of the official [AIO image for Immich](https://github.com/imagegenius/docker-immich). Its main goal is to provide docker images with pre-installed machine learning support for CUDA and openvino.
 
-## Supported Architectures
-
-This image supports the following architectures:
-
-| Architecture | Available |
-| :----------: | :-------: |
-|    x86-64    |    ✅     |
-|    arm64     |    ✅     |
-|    armhf     |    ❌     |
-
 ## Version Tags
 
 This image offers different versions via tags. Be cautious when using unstable or development tags, and read their descriptions carefully.
 
-|   Tag    | Available | Description                                                                                                                               |
-| :------: | :-------: | ----------------------------------------------------------------------------------------------------------------------------------------- |
-|  latest  |    ✅     | Latest Immich release with an Ubuntu base.                                                                                                |
-|  armnn   |    ✅     | Latest Immich release with an Ubuntu base and support for Arm Cortex-A CPUs and Arm Mali GPUs for machine-learning acceleration.          |
-|   cuda   |    ✅     | Latest Immich release with an Ubuntu base and support for cuda for machine-learning acceleration.                                         |
-|   noml   |    ✅     | Latest Immich release with an Ubuntu base. Machine-learning is completely removed, making it still compatible with hardware accelaration. |
-| openvino |    ✅     | Latest Immich release with an Ubuntu base and support for openvino for machine-learning acceleration.                                     |
+|   Tag    | x86-64 | arm64 | Description                                                                                                  |
+| :------: | :----: | :---: | ------------------------------------------------------------------------------------------------------------ |
+|  latest  |   ✅   |  ✅   | Latest Immich release.                                                                                       |
+|  armnn   |   ❌   |  ✅   | Latest Immich release and support for Arm Cortex-A CPUs and Arm Mali GPUs for machine-learning acceleration. |
+|   cuda   |   ✅   |  ❌   | Latest Immich release and support for cuda for machine-learning acceleration (Nvidia).                       |
+|   noml   |   ✅   |  ✅   | Latest Immich release without machine-learning.                                                              |
+| openvino |   ✅   |  ❌   | Latest Immich release and support for openvino for machine-learning acceleration (Intel).                    |
 
 ## Application Setup
 
