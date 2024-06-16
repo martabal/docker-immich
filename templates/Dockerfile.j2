@@ -210,11 +210,11 @@ RUN \
   npm link && \
   npm cache clean --force && \
   cp -a \
-    resources \
+    dist \
+    node_modules \
     package.json \
     package-lock.json \
-    node_modules \
-    dist \
+    resources \
     /app/immich/server && \
   echo "**** build open-api ****" && \
   cd /tmp/immich/open-api/typescript-sdk && \
@@ -226,6 +226,9 @@ RUN \
   npm run build && \
   cp -a \
     build/* \
+    node_modules \
+    package.json \
+    package-lock.json \
     static \
     /app/immich/server/www && \
   echo "**** build CLI ****" && \

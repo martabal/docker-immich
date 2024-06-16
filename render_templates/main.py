@@ -176,14 +176,14 @@ def init(argv: Optional[List[str]] = None):
     parser.add_argument(
         "-p",
         "--print-dockerfile",
-        help="Show the generated Dockerfiles",
+        help="Show the generated Dockerfile(s)",
         action="store_true",
         required=False,
     )
     parser.add_argument(
         "-n",
         "--no-generate",
-        help="Do not generate the generate Dockerfile(s)",
+        help="Do not generate Dockerfile(s)",
         action="store_true",
         required=False,
     )
