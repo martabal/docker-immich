@@ -140,7 +140,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push docker images
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: build-${{ matrix.image }}
           provenance: false # prevent unknown architecture
