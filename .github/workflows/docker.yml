@@ -39,10 +39,10 @@ jobs:
             suffix: -cuda
 
           - image: cpu
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64,linux/arm64,linux/riscv64
 
           - image: noml
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64,linux/arm64,linux/riscv64
             suffix: -noml
 
           - image: openvino
