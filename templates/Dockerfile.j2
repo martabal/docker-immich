@@ -243,6 +243,9 @@ RUN \
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
   pip install --no-compile --break-system-packages --disable-pip-version-check -U --no-cache-dir \
+    {% if machine_learning_provider == "openvino" -%}
+    openvino==2023.3.0 \
+    {% endif -%}
     poetry \
     virtualenv && \
   python{% if machine_learning_provider == "openvino" -%}3.10 {% else %}3.11 {% endif -%} -m venv /lsiopy && \
@@ -276,9 +279,7 @@ RUN \
   echo "hard core 0" >> /etc/security/limits.conf && \
   echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
   echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
-  {% if machine_learning_provider == "openvino" -%}
-  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.3.0 && \
-  {% elif machine_learning_provider == "cuda" -%}
+  {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
