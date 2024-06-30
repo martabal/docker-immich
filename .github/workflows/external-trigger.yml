@@ -27,48 +27,9 @@ jobs:
         id: check_version
         run: |
           current_version=$(curl -sL https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/latest | jq -r '.tag_name')
-          counter=0
-          # Loop until current_version is not "null" or counter reaches 10
-          while [ $counter -lt 10 ]; do
-              current_version=$(curl -sL https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/latest | jq -r '.tag_name')
-
-              # Check if current_version is not "null"
-              if [ "$current_version" != "null" ]; then
-                  echo "current_version is not null: $current_version"
-                  break
-              else
-                  echo "current_version is still null, retrying in 10 seconds..."
-                  sleep 10
-                  ((counter++))
-              fi
-          done
-          if [ "$current_version" = "null" ]; then
-            echo "current_version is still null after 10 attempts, exiting..."
-            exit 1
-          fi
           immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
-          counter=0
-          # Loop until immich_version is not "null" or counter reaches 10
-          while [ $counter -lt 10 ]; do
-              immich_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name')
-
-              # Check if immich_version is not "null"
-              if [ "$immich_version" != "null" ]; then
-                  echo "immich_version is not null: $immich_version"
-                  break
-              else
-                  echo "immich_version is still null, retrying in 10 seconds..."
-                  sleep 10
-                  ((counter++))
-              fi
-          done
-          if [ "$immich_version" = "null" ]; then
-            echo "immich_version is still null after 10 attempts, exiting..."
-            exit 1
-          fi
-          if [ -z "$current_version" ] || [ -z "$immich_version" ]; then
-              echo "Error: One of the versions is null."
-              exit 1
+          if [[ "$current_version" == "null" || "$immich_version" == "null" ]]; then
+              echo "new_version=false" >> $GITHUB_OUTPUT
           fi
           if [ "$current_version" != "$immich_version" ]; then
             if git tag | grep -q "^$immich_version$"; then
