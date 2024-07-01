@@ -82,7 +82,6 @@ def generate_template(
     build_folder: str,
     flavor: Flavor,
 ) -> None:
-
     flavor_name = flavor["name"]
     machine_learning_provider = flavor["machine_learning_provider"]
     root_folder_path = os.path.join(build_folder, "root")
