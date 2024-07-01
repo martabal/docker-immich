@@ -33,11 +33,11 @@ def test_wrong_args():
     with pytest.raises(SystemExit) as e:
         argv = ["-n"]
         init(argv)
-    assert e.type == SystemExit
+    assert e.type is SystemExit
     with pytest.raises(SystemExit) as e:
         argv = ["-n", "--flavor", flavors[0]["name"]]
         init(argv)
-    assert e.type == SystemExit
+    assert e.type is SystemExit
 
 
 def test_check_folder():

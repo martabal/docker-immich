@@ -37,11 +37,11 @@ jobs:
         run: poetry install --with dev,test
 
       - name: Run python linter
-        run: poetry run ruff check .
+        run: poetry run ruff check render_templates
         if: ${{ !cancelled() }}
 
       - name: Run python formatter
-        run: poetry run black --check .
+        run: poetry run ruff format --check render_templates
         if: ${{ !cancelled() }}
 
       - name: Run tests and coverage
