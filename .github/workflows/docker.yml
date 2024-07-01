@@ -150,4 +150,13 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           build-args: |
             BUILD_VERSION=${{ steps.tags.outputs.build_date }}
+            BUILD_ID=${{ github.run_id }}
+            BUILD_IMAGE=${{ matrix.image == 'cpu' && 'latest' || matrix.image }}
+            BUILD_IMAGE_URL="https://github.com/${{ github.repository }}/pkgs/container/immich"
+            BUILD_REPOSITORY=${{ github.repository }}
+            BUILD_REPOSITORY_URL"https://github.com/${{ github.repository }}"
+            BUILD_SOURCE_COMMIT=${{ github.sha }}
+            BUILD_SOURCE_REF=${{ github.ref_name }}
+            BUILD_SOURCE_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}""
+            BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}""
             IMMICH_VERSION=${{ steps.tags.outputs.immich_version }}
