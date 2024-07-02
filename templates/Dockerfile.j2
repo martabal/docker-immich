@@ -4,6 +4,16 @@ FROM ghcr.io/martabal/baseimage-ubuntu:noble
 
 # set version label
 ARG BUILD_DATE
+ARG BUILD_ID
+ARG BUILD_IMAGE
+ARG BUILD_IMAGE_URL
+ARG BUILD_REPOSITORY
+ARG BUILD_REPOSITORY_URL
+ARG BUILD_SOURCE_COMMIT
+ARG BUILD_SOURCE_REF
+ARG BUILD_SOURCE_URL
+ARG BUILD_URL
+
 ARG IMMICH_VERSION
 
 # hadolint ignore=DL3048
@@ -25,9 +35,18 @@ ENV \
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
+  IMMICH_BUILD=${BUILD_ID} \
+  IMMICH_BUILD_IMAGE=${BUILD_IMAGE} \
+  IMMICH_BUILD_IMAGE_URL=${BUILD_IMAGE_URL} \
+  IMMICH_BUILD_URL=${BUILD_URL} \
   IMMICH_MEDIA_LOCATION="/photos" \
   IMMICH_PORT="8080" \
+  IMMICH_REPOSITORY=${BUILD_REPOSITORY} \
+  IMMICH_REPOSITORY_URL=${BUILD_REPOSITORY_URL} \
   IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/geodata" \
+  IMMICH_SOURCE_COMMIT=${BUILD_SOURCE_COMMIT} \
+  IMMICH_SOURCE_REF=${BUILD_SOURCE_REF} \
+  IMMICH_SOURCE_URL=${BUILD_SOURCE_URL} \
   IMMICH_WEB_ROOT="/app/immich/server/www" \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
 
@@ -46,7 +65,7 @@ RUN \
   echo "**** install build packages ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
-  {% if machine_learning_provider -%}
+  {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
   {% endif -%}
@@ -120,9 +139,9 @@ RUN \
     python3.10-venv \
     python3.10 \
     {% else -%}
-    python3.11-dev \
-    python3.11-venv \
-    python3.11 \
+    python3-dev \
+    python3-venv \
+    python3 \
     {% endif -%}
     {% endif -%}
     zlib1g && \
@@ -245,7 +264,7 @@ RUN \
   pip install --no-compile --break-system-packages --disable-pip-version-check -U --no-cache-dir \
     poetry \
     virtualenv && \
-  python{% if machine_learning_provider == "openvino" -%}3.10 {% else %}3.11 {% endif -%} -m venv /lsiopy && \
+  {% if machine_learning_provider == "openvino" -%}python3.10 {% else %}python3 {% endif -%} -m venv /lsiopy && \
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
   cp -a \
@@ -293,8 +312,8 @@ RUN \
     python3.10-dev \
     python3.10-venv \
     {% else -%}
-    python3.11-dev \
-    python3.11-venv \
+    python3-dev \
+    python3-venv \
     {% endif -%}
     python3-pip \
     {% endif -%}
@@ -324,7 +343,7 @@ RUN \
   apt-get clean && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
-    {% if machine_learning_provider -%}
+    {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/deadsnakes.list \
     /usr/share/keyrings/deadsnakes.gpg \
     {% endif -%}
