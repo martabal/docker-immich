@@ -36,6 +36,7 @@ ENV \
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
   {% endif -%}
   IMMICH_BUILD=${BUILD_ID} \
+  IMMICH_BUILD_DATA="/app/immich/server" \
   IMMICH_BUILD_IMAGE=${BUILD_IMAGE} \
   IMMICH_BUILD_IMAGE_URL=${BUILD_IMAGE_URL} \
   IMMICH_BUILD_URL=${BUILD_URL} \
@@ -43,12 +44,15 @@ ENV \
   IMMICH_PORT="8080" \
   IMMICH_REPOSITORY=${BUILD_REPOSITORY} \
   IMMICH_REPOSITORY_URL=${BUILD_REPOSITORY_URL} \
-  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/server/geodata" \
   IMMICH_SOURCE_COMMIT=${BUILD_SOURCE_COMMIT} \
   IMMICH_SOURCE_REF=${BUILD_SOURCE_REF} \
   IMMICH_SOURCE_URL=${BUILD_SOURCE_URL} \
-  IMMICH_WEB_ROOT="/app/immich/server/www" \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
+  
+# To be removed in version > v1.107.2
+ENV \
+  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/server/geodata" \
+  IMMICH_WEB_ROOT="/app/immich/server/www"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
