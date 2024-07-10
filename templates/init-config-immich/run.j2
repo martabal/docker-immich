@@ -9,7 +9,14 @@ mkdir -p \
     "$IMMICH_MEDIA_LOCATION"
 
 # permissions
-find "$IMMICH_MEDIA_LOCATION" -maxdepth 0 \( ! -user abc -o ! -group abc \) -exec lsiown -R abc:abc {} \;
+if find "$IMMICH_MEDIA_LOCATION" -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q "$IMMICH_MEDIA_LOCATION"; then
+    echo "**** changing permissions for $IMMICH_MEDIA_LOCATION ****"
+    lsiown -R abc:abc "$IMMICH_MEDIA_LOCATION"
+fi
+
+if find /config -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q /config; then
+    echo "**** changing permissions for /config ****"
+    lsiown -R abc:abc /config
+fi
+
 find /app/immich -path "*/node_modules" -prune -o -exec chown abc:abc {} +
-lsiown -R abc:abc \
-    /config

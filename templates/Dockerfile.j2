@@ -48,11 +48,6 @@ ENV \
   IMMICH_SOURCE_REF=${BUILD_SOURCE_REF} \
   IMMICH_SOURCE_URL=${BUILD_SOURCE_URL} \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
-  
-# To be removed in version > v1.107.2
-ENV \
-  IMMICH_REVERSE_GEOCODING_ROOT="/app/immich/server/geodata" \
-  IMMICH_WEB_ROOT="/app/immich/server/www"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
