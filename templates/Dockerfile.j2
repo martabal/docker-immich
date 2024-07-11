@@ -158,10 +158,28 @@ RUN \
     done && \
     dpkg -i /tmp/intel/*.deb; \
   fi && \
-  echo "**** download immich dependencies ****" && \
+  echo "**** download immich ****" && \
+  if [ -z ${IMMICH_VERSION} ]; then \
+    IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
+      jq -r '.tag_name'); \
+  fi && \
+  curl -o \
+    /tmp/immich.tar.gz -L \
+    "https://github.com/immich-app/immich/archive/${IMMICH_VERSION}.tar.gz" && \
+  tar xf \
+    /tmp/immich.tar.gz -C \
+    /tmp/immich --strip-components=1 && \
+  dockerfile_content=$(cat /tmp/immich/server/Dockerfile) && \
+  date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}') && \
+  if [ -z "$date" ]; then \
+    IMMICH_BASE_IMAGE_TAG="main"; \
+  else \
+    IMMICH_BASE_IMAGE_TAG="$date"; \
+  fi && \
+  echo "**** download immich dependencies v${IMMICH_BASE_IMAGE_TAG} ****" && \
   curl -o \
     /tmp/immich-dependencies.tar.gz -L \
-    "https://github.com/immich-app/base-images/archive/main.tar.gz" && \
+    "https://github.com/immich-app/base-images/archive/${IMMICH_BASE_IMAGE_TAG}.tar.gz" && \
   tar xf \
     /tmp/immich-dependencies.tar.gz -C \
     /tmp/immich-dependencies --strip-components=1 && \
@@ -197,17 +215,6 @@ RUN \
     /tmp/cities500.zip -d \
     /app/immich/server/geodata && \
   date --iso-8601=seconds | tr -d "\n" > /app/immich/server/geodata/geodata-date.txt && \
-  echo "**** download immich ****" && \
-  if [ -z ${IMMICH_VERSION} ]; then \
-    IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
-      jq -r '.tag_name'); \
-  fi && \
-  curl -o \
-    /tmp/immich.tar.gz -L \
-    "https://github.com/immich-app/immich/archive/${IMMICH_VERSION}.tar.gz" && \
-  tar xf \
-    /tmp/immich.tar.gz -C \
-    /tmp/immich --strip-components=1 && \
   echo "**** copy scripts ****" && \
   cd /tmp/immich/docker && \
   cp -r \
