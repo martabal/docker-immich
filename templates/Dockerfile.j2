@@ -270,9 +270,8 @@ RUN \
   {% if machine_learning_provider -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
-  pip install --no-compile --break-system-packages --disable-pip-version-check -U --no-cache-dir \
-    poetry \
-    virtualenv && \
+  curl -sSL https://install.python-poetry.org | python3 - && \
+  export PATH="/root/.local/bin:$PATH" && \
   {% if machine_learning_provider == "openvino" -%}python3.10 {% else %}python3 {% endif -%} -m venv /lsiopy && \
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
@@ -315,6 +314,9 @@ RUN \
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if machine_learning_provider == "cuda" %}cuda{% elif machine_learning_provider == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
   echo "**** cleanup ****" && \
+  {% if machine_learning_provider -%}
+  curl -sSL https://install.python-poetry.org | python3 - --uninstall && \
+  {% endif -%}
   apt-get remove -y --purge \
     {% if machine_learning_provider -%}
     {% if machine_learning_provider == "openvino" -%}
