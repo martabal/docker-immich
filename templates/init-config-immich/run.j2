@@ -6,12 +6,12 @@ mkdir -p \
     {% if machine_learning_provider -%}
     /config/machine-learning \
     {% endif -%}
-    "$IMMICH_MEDIA_LOCATION"
+    "${IMMICH_MEDIA_LOCATION}"
 
 # permissions
-if find "$IMMICH_MEDIA_LOCATION" -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q "$IMMICH_MEDIA_LOCATION"; then
-    echo "**** changing permissions for $IMMICH_MEDIA_LOCATION ****"
-    lsiown -R abc:abc "$IMMICH_MEDIA_LOCATION"
+if find "${IMMICH_MEDIA_LOCATION}" -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q "${IMMICH_MEDIA_LOCATION}"; then
+    echo "**** changing permissions for ${IMMICH_MEDIA_LOCATION} in the background ****"
+    lsiown -R abc:abc "${IMMICH_MEDIA_LOCATION}" &
 fi
 
 if find /config -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q /config; then

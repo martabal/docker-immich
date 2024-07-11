@@ -145,7 +145,7 @@ services:
 - Docker CLI:
 
   ```bash
-  docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -p /dev/bus/usb:/dev/bus/usb ...
+  docker run --device=/dev/dri --device-cgroup-rule='c 189:* rmw' -v /dev/bus/usb:/dev/bus/usb ...
   ```
 
 - Docker Compose:
