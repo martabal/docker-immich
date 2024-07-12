@@ -10,8 +10,8 @@ mkdir -p \
 
 # permissions
 if find "${IMMICH_MEDIA_LOCATION}" -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q "${IMMICH_MEDIA_LOCATION}"; then
-    echo "**** changing permissions for ${IMMICH_MEDIA_LOCATION} in the background ****"
-    lsiown -R abc:abc "${IMMICH_MEDIA_LOCATION}" &
+    echo "**** changing permissions for ${IMMICH_MEDIA_LOCATION} ****"
+    lsiown -R abc:abc "${IMMICH_MEDIA_LOCATION}"
 fi
 
 if find /config -maxdepth 0 \( ! -user abc -o ! -group abc \) | grep -q /config; then
