@@ -9,8 +9,14 @@ on:
         type: string
   push:
     branches: ["main"]
+    paths:
+      - "templates/**"
+      - "root/**"
   pull_request:
     branches: ["main"]
+    paths:
+      - "templates/**"
+      - "root/**"
   schedule:
     - cron: "0 12 * * 3"
 
