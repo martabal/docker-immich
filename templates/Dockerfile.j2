@@ -15,6 +15,7 @@ ARG BUILD_SOURCE_URL
 ARG BUILD_URL
 
 ARG IMMICH_VERSION
+ARG IMMICH_BASE_IMAGE_TAG
 
 # hadolint ignore=DL3048
 LABEL build_version="Build-date:- ${BUILD_DATE}"
@@ -73,12 +74,14 @@ RUN \
     autoconf \
     bc \
     build-essential \
+    cmake \
     git \
+    libdav1d-dev \
+    libde265-dev \
     libexif-dev \
     libexpat1-dev \
     libglib2.0-dev \
     libgsf-1-dev \
-    libheif-dev \
     libjpeg-dev \
     libjxl-dev \
     libltdl-dev \
@@ -99,13 +102,14 @@ RUN \
     libcufft11 \
     libcurand10 \
     {% endif -%}
+    libdav1d7 \
+    libde265-0 \
     libexif12 \
     libexpat1 \
     libgcc-s1 \
     libglib2.0-0 \
     libgomp1 \
     libgsf-1-114 \
-    libheif1 \
     libio-compress-brotli-perl \
     libjxl0.7 \
     liblcms2-2 \
@@ -131,16 +135,16 @@ RUN \
     nodejs \
     perl \
     {% if machine_learning_provider -%}
-    python3-pip \
     {% if machine_learning_provider == "openvino" -%}
+    python3.10 \
     python3.10-dev \
     python3.10-venv \
-    python3.10 \
     {% else -%}
+    python3 \
     python3-dev \
     python3-venv \
-    python3 \
     {% endif -%}
+    python3-pip \
     {% endif -%}
     zlib1g && \
   if [ $(arch) = "x86_64" ]; then \
@@ -168,14 +172,16 @@ RUN \
   tar xf \
     /tmp/immich.tar.gz -C \
     /tmp/immich --strip-components=1 && \
-  dockerfile_content=$(cat /tmp/immich/server/Dockerfile) && \
-  date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}') && \
-  if [ -z "$date" ]; then \
-    IMMICH_BASE_IMAGE_TAG="main"; \
-  else \
-    IMMICH_BASE_IMAGE_TAG="$date"; \
+  if [ -z ${IMMICH_BASE_IMAGE_TAG} ]; then \
+    dockerfile_content=$(cat /tmp/immich/server/Dockerfile) && \
+    date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}') && \
+    if [ -z "$date" ]; then \
+      IMMICH_BASE_IMAGE_TAG="main"; \
+    else \
+      IMMICH_BASE_IMAGE_TAG="$date"; \
+    fi \
   fi && \
-  echo "**** download immich dependencies v${IMMICH_BASE_IMAGE_TAG} ****" && \
+  echo "**** download immich dependencies ${IMMICH_BASE_IMAGE_TAG} ****" && \
   curl -o \
     /tmp/immich-dependencies.tar.gz -L \
     "https://github.com/immich-app/base-images/archive/${IMMICH_BASE_IMAGE_TAG}.tar.gz" && \
@@ -194,6 +200,7 @@ RUN \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
+  ./build-libheif.sh && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
   ./build-libvips.sh && \
@@ -210,6 +217,9 @@ RUN \
   curl -o \
     /app/immich/server/geodata/admin2Codes.txt -L \
     "https://download.geonames.org/export/dump/admin2Codes.txt" && \
+  curl -o \
+    /app/immich/server/geodata/ne_10m_admin_0_countries.geojson -L \
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson" && \
   unzip \
     /tmp/cities500.zip -d \
     /app/immich/server/geodata && \
@@ -317,20 +327,13 @@ RUN \
   curl -sSL https://install.python-poetry.org | python3 - --uninstall && \
   {% endif -%}
   apt-get remove -y --purge \
-    {% if machine_learning_provider -%}
-    {% if machine_learning_provider == "openvino" -%}
-    python3.10-dev \
-    python3.10-venv \
-    {% else -%}
-    python3-dev \
-    python3-venv \
-    {% endif -%}
-    python3-pip \
-    {% endif -%}
     autoconf \
     bc \
     build-essential \
+    cmake \
     git \
+    libdav1d-dev \
+    libde265-dev \
     libexif-dev \
     libexpat1-dev \
     libglib2.0-dev \
@@ -346,6 +349,16 @@ RUN \
     libwebp-dev \
     meson \
     pkg-config \
+    {% if machine_learning_provider -%}
+    {% if machine_learning_provider == "openvino" -%}
+    python3.10-dev \
+    python3.10-venv \
+    {% else -%}
+    python3-dev \
+    python3-venv \
+    {% endif -%}
+    python3-pip \
+    {% endif -%}
     unzip && \
   apt-get autoremove -y --purge && \
   apt-get clean && \
