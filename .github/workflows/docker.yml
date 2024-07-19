@@ -12,11 +12,13 @@ on:
     paths:
       - "templates/**"
       - "root/**"
+      - ".github/**"
   pull_request:
     branches: ["main"]
     paths:
       - "templates/**"
       - "root/**"
+      - ".github/**"
   schedule:
     - cron: "0 12 * * 3"
 
