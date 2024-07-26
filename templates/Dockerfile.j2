@@ -28,10 +28,6 @@ ENV \
   DEVICE="{{ machine_learning_provider }}" \
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
-  {% if machine_learning_provider == "openvino" -%}
-  NEOReadDebugKeys="1" \
-  OverrideGpuAddressSpace="48" \
-  {% endif -%}
   TRANSFORMERS_CACHE="/config/machine-learning" \
   {% else -%}
   IMMICH_MACHINE_LEARNING_ENABLED="false" \
@@ -312,12 +308,10 @@ RUN \
   echo "hard core 0" >> /etc/security/limits.conf && \
   echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
   echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
-  {% if machine_learning_provider == "openvino" -%}
-  poetry add --lock --no-interaction --no-ansi --group openvino openvino==2023.3.0 && \
-  {% elif machine_learning_provider == "cuda" -%}
+  {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn8.deb" -L \
-    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.9.7.29-1+cuda12.2_amd64.deb" && \
+    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn9-cuda-12_9.2.1.18-1_amd64.deb" && \
   dpkg -i "/tmp/libcudnn8.deb" && \
   {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if machine_learning_provider == "cuda" %}cuda{% elif machine_learning_provider == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
