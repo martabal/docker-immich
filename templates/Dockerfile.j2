@@ -310,9 +310,9 @@ RUN \
   echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
   {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
-  curl -o "/tmp/libcudnn8.deb" -L \
+  curl -o "/tmp/libcudnn9.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn9-cuda-12_9.2.1.18-1_amd64.deb" && \
-  dpkg -i "/tmp/libcudnn8.deb" && \
+  dpkg -i "/tmp/libcudnn9.deb" && \
   {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {% if machine_learning_provider == "cuda" %}cuda{% elif machine_learning_provider == "openvino" %}openvino{% else %}cpu{% endif %} --without dev && \
   {% endif -%}
