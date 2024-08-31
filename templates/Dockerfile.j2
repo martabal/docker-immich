@@ -203,6 +203,12 @@ RUN \
   mv \
     /tmp/immich-dependencies/server/bin/build-lock.json \
     /app/immich/server && \
+  {% if machine_learning_provider == "cuda" -%}
+  echo "**** download libcudnn ****" && \
+  curl -o "/tmp/libcudnn9.deb" -L \
+    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb" && \
+  dpkg -i "/tmp/libcudnn9.deb" && \
+  {% endif -%}
   echo "**** download geocoding data ****" && \
   curl -o \
     /tmp/cities500.zip -L \
@@ -308,12 +314,6 @@ RUN \
   echo "hard core 0" >> /etc/security/limits.conf && \
   echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
   echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
-  {% if machine_learning_provider == "cuda" -%}
-  echo "**** download libcudnn ****" && \
-  curl -o "/tmp/libcudnn9.deb" -L \
-    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn9-cuda-12_9.2.1.18-1_amd64.deb" && \
-  dpkg -i "/tmp/libcudnn9.deb" && \
-  {% endif -%}
   poetry install --sync --no-interaction --no-ansi --no-root --with {{ machine_learning_provider }} --without dev && \
   {% endif -%}
   echo "**** cleanup ****" && \
