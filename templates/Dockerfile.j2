@@ -363,6 +363,9 @@ RUN \
     /usr/share/keyrings/deadsnakes.gpg \
     {% endif -%}
     /root/.cache \
+    {% if machine_learning_provider -%}
+    /root/.local \
+    {% endif -%}
     /root/.npm \
     /tmp/* \
     /usr/share/keyrings/nodesource-repo.gpg \
