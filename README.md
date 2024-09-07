@@ -20,7 +20,7 @@ This image offers different versions via tags. Be cautious when using unstable o
 | :------: | :----: | :---: | ------------------------------------------------------------------------------------------------------------ |
 |  latest  |   ✅   |  ✅   | Latest Immich release.                                                                                       |
 |  armnn   |   ❌   |  ✅   | Latest Immich release and support for Arm Cortex-A CPUs and Arm Mali GPUs for machine-learning acceleration. |
-|   cuda   |   ✅   |  ❌   | Latest Immich release and support for cuda for machine-learning acceleration (Nvidia).                       |
+|   cuda   |   ✅   |  ✅   | Latest Immich release and support for cuda for machine-learning acceleration (Nvidia).                       |
 |   noml   |   ✅   |  ✅   | Latest Immich release without machine-learning.                                                              |
 | openvino |   ✅   |  ❌   | Latest Immich release and support for openvino for machine-learning acceleration (Intel).                    |
 

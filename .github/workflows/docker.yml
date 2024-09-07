@@ -43,7 +43,7 @@ jobs:
             suffix: -armnn
 
           - image: cuda
-            platforms: linux/amd64
+            platforms: linux/amd64,linux/arm64
             suffix: -cuda
 
           - image: cpu

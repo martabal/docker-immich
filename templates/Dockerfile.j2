@@ -216,8 +216,13 @@ RUN \
     /app/immich/server && \
   {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
+  if [ $(arch) = "x86_64" ]; then \
+    CUDA_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb"; \
+  else \
+    CUDA_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/libcudnn9-cuda-12_9.4.0.58-1_arm64.deb"; \
+  fi && \
   curl -o "/tmp/libcudnn9.deb" -L \
-    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb" && \
+    "${CUDA_URL}" && \
   dpkg -i "/tmp/libcudnn9.deb" && \
   {% endif -%}
   echo "**** download geocoding data ****" && \
