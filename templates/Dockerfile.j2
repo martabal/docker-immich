@@ -17,6 +17,7 @@ ARG BUILD_URL
 ARG IMMICH_VERSION
 ARG IMMICH_BASE_IMAGE_TAG
 
+ARG CURRENT_UBUNTU_VERSION="noble"
 ARG LATEST_UBUNTU_VERSION="oracular"
 
 # hadolint ignore=DL3048
@@ -61,17 +62,29 @@ RUN \
     /app/immich/{cli,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/geodata,server/www} \
     /tmp/{immich-dependencies,immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "**** install build packages ****" && \
+  if [ $(arch) = "x86_64" ]; then \
+    {% if machine_learning_provider == "cuda" -%}
+    CUDA_UBUNTU_REPO="ubuntu2404" && \
+    CUDA_ARCHITECTURE="x86_64" && \
+    {% endif -%}
+    UBUNTU_REPO="http://archive.ubuntu.com/ubuntu/"; \
+  else \
+    {% if machine_learning_provider == "cuda" -%}
+    CUDA_UBUNTU_REPO="ubuntu2204" && \
+    CUDA_ARCHITECTURE="arm64" && \
+    {% endif -%}
+    UBUNTU_REPO="http://ports.ubuntu.com/ubuntu-ports/"; \
+  fi && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
   {% if machine_learning_provider == "openvino" -%}
-  echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
+  echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu ${CURRENT_UBUNTU_VERSION} main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
+  {% elif machine_learning_provider == "cuda" -%}
+  echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/${CUDA_UBUNTU_REPO}/${CUDA_ARCHITECTURE}/ /" >>/etc/apt/sources.list.d/cuda.list && \
+  curl -s "https://developer.download.nvidia.com/compute/cuda/repos/${CUDA_UBUNTU_REPO}/${CUDA_ARCHITECTURE}/3bf863cc.pub" | gpg --dearmor | tee /usr/share/keyrings/cuda-archive-keyring.gpg >/dev/null && \
+  printf "Package: *\nPin: release l=NVIDIA CUDA\nPin-Priority: 600" > /etc/apt/preferences.d/cuda && \
   {% endif -%}
-  if [ $(arch) = "x86_64" ]; then \
-    UBUNTU_REPO="http://archive.ubuntu.com/ubuntu/"; \
-  else \
-    UBUNTU_REPO="http://ports.ubuntu.com/ubuntu-ports/"; \
-  fi && \
   printf "deb ${UBUNTU_REPO} ${LATEST_UBUNTU_VERSION} main restricted universe multiverse\ndeb-src ${UBUNTU_REPO} ${LATEST_UBUNTU_VERSION} main restricted universe multiverse" >> /etc/apt/sources.list && \
   printf "Package: *\nPin: release n=${LATEST_UBUNTU_VERSION}\nPin-Priority: 450" > /etc/apt/preferences.d/preferences && \
   apt-get update && \
@@ -105,6 +118,7 @@ RUN \
     libcublas12 \
     libcublaslt12 \
     libcudart12 \
+    libcudnn9-cuda-12 \
     libcufft11 \
     libcurand10 \
     {% endif -%}
@@ -201,7 +215,7 @@ RUN \
   TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
   curl -o \
     /tmp/ffmpeg.deb -L \
-    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-noble_${TARGETARCH}.deb" && \
+    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-${CURRENT_UBUNTU_VERSION}_${TARGETARCH}.deb" && \
   apt-get install --no-install-recommends -y -f \
     /tmp/ffmpeg.deb && \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
@@ -214,17 +228,6 @@ RUN \
   mv \
     /tmp/immich-dependencies/server/bin/build-lock.json \
     /app/immich/server && \
-  {% if machine_learning_provider == "cuda" -%}
-  echo "**** download libcudnn ****" && \
-  if [ $(arch) = "x86_64" ]; then \
-    CUDA_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb"; \
-  else \
-    CUDA_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/libcudnn9-cuda-12_9.4.0.58-1_arm64.deb"; \
-  fi && \
-  curl -o "/tmp/libcudnn9.deb" -L \
-    "${CUDA_URL}" && \
-  dpkg -i "/tmp/libcudnn9.deb" && \
-  {% endif -%}
   echo "**** download geocoding data ****" && \
   curl -o \
     /tmp/cities500.zip -L \
@@ -377,6 +380,9 @@ RUN \
     {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/deadsnakes.list \
     /usr/share/keyrings/deadsnakes.gpg \
+    {% elif machine_learning_provider == "cuda" -%}
+    /etc/apt/sources.list.d/cuda.list \
+    /usr/share/keyrings/cuda-archive-keyring.gpg \
     {% endif -%}
     /root/.cache \
     {% if machine_learning_provider -%}
