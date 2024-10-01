@@ -168,3 +168,7 @@ jobs:
             BUILD_SOURCE_URL=https://github.com/${{ github.repository }}/commit/${{ github.sha }}
             BUILD_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             IMMICH_VERSION=${{ steps.tags.outputs.immich_version }}
+            THIRD_PARTY_BUG_FEATURE_URL=https://github.com/${{ github.repository }}/issues
+            THIRD_PARTY_DOCUMENTATION_URL=https://github.com/${{ github.repository }}/blob/main/README.md
+            THIRD_PARTY_SOURCE_URL=https://github.com/${{ github.repository }}
+            THIRD_PARTY_SUPPORT_URL=https://github.com/${{ github.repository }}/discussions
