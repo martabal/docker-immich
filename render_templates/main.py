@@ -155,7 +155,7 @@ def init(argv: Optional[List[str]] = None):
     if argv is None:
         args = sys.argv
     parser = argparse.ArgumentParser(
-        description="Render templates for differents AIO flavors"
+        description="Render templates for different AIO flavors"
     )
     parser.add_argument(
         "-b",
