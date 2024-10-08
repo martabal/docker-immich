@@ -91,15 +91,14 @@ RUN \
     build-essential \
     cmake \
     git \
-    libdav1d-dev \
     libde265-dev \
     libexif-dev \
     libexpat1-dev \
     libglib2.0-dev \
     libgsf-1-dev \
-    libjpeg-dev \
+    libjpeg-turbo8-dev \
     libltdl-dev \
-    liborc-0.4-dev \
+    libbrotli-dev \
     librsvg2-dev \
     libspng-dev \
     libtool \
@@ -108,7 +107,9 @@ RUN \
     pkg-config \
     unzip && \
   apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl-dev && \
+    libdav1d-dev \
+    libhwy-dev \
+    libwebp-dev && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     {% if machine_learning_provider == "cuda" -%}
@@ -127,19 +128,16 @@ RUN \
     libgomp1 \
     libgsf-1-114 \
     libio-compress-brotli-perl \
+    libjpeg-turbo8 \
     liblcms2-2 \
     liblqr-1-0 \
     libltdl7 \
     libmimalloc2.0 \
     libopenexr-3-1-30 \
     libopenjp2-7 \
-    liborc-0.4-0 \
     libpng16-16 \
     librsvg2-2 \
     libspng0 \
-    libwebp7 \
-    libwebpdemux2 \
-    libwebpmux3 \
     {% if machine_learning_provider == "armnn" -%}
     mesa-opencl-icd \
     ocl-icd-libopencl1 \
@@ -163,7 +161,10 @@ RUN \
     {% endif -%}
     zlib1g && \
   apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl0.10 && \
+    libhwy1t64 \
+    libwebp7 \
+    libwebpdemux2 \
+    libwebpmux3 && \
   if [ $(arch) = "x86_64" ]; then \
     echo "**** install intel dependencies ****" && \
     apt-get install --no-install-recommends -y \
@@ -217,6 +218,7 @@ RUN \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
+  ./build-libjxl.sh && \
   ./build-libheif.sh && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
@@ -354,10 +356,10 @@ RUN \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
-    libjpeg-dev \
-    libjxl-dev \
+    libhwy-dev \
+    libjpeg-turbo8-dev \
     libltdl-dev \
-    liborc-0.4-dev \
+    libbrotli-dev \
     librsvg2-dev \
     libspng-dev \
     libtool \
@@ -377,6 +379,7 @@ RUN \
     unzip && \
   apt-get autoremove -y --purge && \
   apt-get clean && \
+  dpkg -r --force-depends libjpeg-turbo8 && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
     {% if machine_learning_provider == "openvino" -%}
