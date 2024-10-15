@@ -7,6 +7,10 @@ on:
         description: "version"
         required: false
         type: string
+      base_image_tag:
+        description: "base image tag"
+        required: false
+        type: string
   push:
     branches: ["main"]
     paths:
@@ -91,12 +95,32 @@ jobs:
                 exit 1
             fi
           fi
+
+          if [ "${{ inputs.base_image_tag }}" != '' ]; then
+            base_image_tag="${{ inputs.base_image_tag }}"
+          else
+            mkdir /tmp/immich
+            curl -o \
+              /tmp/immich.tar.gz -L \
+              "https://github.com/immich-app/immich/archive/${immich_version}.tar.gz" && \
+            tar xf \
+              /tmp/immich.tar.gz -C \
+              /tmp/immich --strip-components=1 && \
+            dockerfile_content=$(cat /tmp/immich/server/Dockerfile)
+            date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}')
+            if [ -z "$date" ]; then
+              base_image_tag="latest";
+            else
+              base_image_tag="$date";
+            fi
+          fi
           short_version="${immich_version#v}"
           echo "immich_version=${immich_version}" >> $GITHUB_OUTPUT
           echo "build_date=$(date +'%Y-%m-%dT%H:%M:%S%:z')" >> $GITHUB_OUTPUT
           echo "short_date=$(date '+%Y%m%d')" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "short_version=${short_version}" >> $GITHUB_OUTPUT
+          echo "base_image_tag=${base_image_tag}" >> $GITHUB_OUTPUT
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -167,6 +191,7 @@ jobs:
             BUILD_SOURCE_REF=${{ github.ref_name }}
             BUILD_SOURCE_URL=https://github.com/${{ github.repository }}/commit/${{ github.sha }}
             BUILD_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            BASE_IMAGE_TAG=${{ steps.tags.outputs.base_image_tag }}
             IMMICH_VERSION=${{ steps.tags.outputs.immich_version }}
             THIRD_PARTY_BUG_FEATURE_URL=https://github.com/${{ github.repository }}/issues
             THIRD_PARTY_DOCUMENTATION_URL=https://github.com/${{ github.repository }}/blob/main/README.md

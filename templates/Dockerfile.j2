@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/martabal/baseimage-ubuntu:noble
+ARG BASE_IMAGE_TAG="latest"
+
+FROM ghcr.io/martabal/baseimage-immich:${BASE_IMAGE_TAG}
 
 # set version label
 ARG BUILD_DATE
@@ -21,9 +23,6 @@ ARG THIRD_PARTY_SOURCE_URL
 ARG THIRD_PARTY_SUPPORT_URL
 
 ARG IMMICH_VERSION
-ARG IMMICH_BASE_IMAGE_TAG
-
-ARG LATEST_UBUNTU_VERSION="oracular"
 
 # hadolint ignore=DL3048
 LABEL build_version="Build-date:- ${BUILD_DATE}"
@@ -63,52 +62,22 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # run build
 # hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %},SC2046
 RUN \
-  echo "**** create folders ****" && \
   mkdir -p \
     {% if machine_learning_provider == "armnn" -%}
     /etc/OpenCL/vendors \
     {% endif -%}
-    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/geodata,server/www} \
-    /tmp/{immich-dependencies,immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
-  echo "**** install build packages ****" && \
+    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
+    /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
   {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
   {% endif -%}
-  if [ $(arch) = "x86_64" ]; then \
-    UBUNTU_REPO="http://archive.ubuntu.com/ubuntu/"; \
-  else \
-    UBUNTU_REPO="http://ports.ubuntu.com/ubuntu-ports/"; \
-  fi && \
-  printf "deb ${UBUNTU_REPO} ${LATEST_UBUNTU_VERSION} main restricted universe multiverse\ndeb-src ${UBUNTU_REPO} ${LATEST_UBUNTU_VERSION} main restricted universe multiverse" >> /etc/apt/sources.list && \
-  printf "Package: *\nPin: release n=${LATEST_UBUNTU_VERSION}\nPin-Priority: 450" > /etc/apt/preferences.d/preferences && \
+  echo "**** install build packages ****" && \
   apt-get update && \
   apt-get install --no-install-recommends -y \
-    autoconf \
-    bc \
-    build-essential \
-    cmake \
-    git \
-    libdav1d-dev \
-    libde265-dev \
-    libexif-dev \
-    libexpat1-dev \
-    libglib2.0-dev \
-    libgsf-1-dev \
-    libjpeg-dev \
-    libltdl-dev \
-    liborc-0.4-dev \
-    librsvg2-dev \
-    libspng-dev \
-    libtool \
-    libwebp-dev \
-    meson \
-    pkg-config \
-    unzip && \
-  apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl-dev && \
+    build-essential && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     {% if machine_learning_provider == "cuda" -%}
@@ -118,37 +87,10 @@ RUN \
     libcufft11 \
     libcurand10 \
     {% endif -%}
-    libdav1d7 \
-    libde265-0 \
-    libexif12 \
-    libexpat1 \
-    libgcc-s1 \
-    libglib2.0-0 \
-    libgomp1 \
-    libgsf-1-114 \
-    libio-compress-brotli-perl \
-    liblcms2-2 \
-    liblqr-1-0 \
-    libltdl7 \
-    libmimalloc2.0 \
-    libopenexr-3-1-30 \
-    libopenjp2-7 \
-    liborc-0.4-0 \
-    libpng16-16 \
-    librsvg2-2 \
-    libspng0 \
-    libwebp7 \
-    libwebpdemux2 \
-    libwebpmux3 \
     {% if machine_learning_provider == "armnn" -%}
     mesa-opencl-icd \
     ocl-icd-libopencl1 \
     {% endif -%}
-    mesa-utils \
-    mesa-va-drivers \
-    mesa-vulkan-drivers \
-    nodejs \
-    perl \
     {% if machine_learning_provider -%}
     {% if machine_learning_provider == "openvino" -%}
     python3.10 \
@@ -161,23 +103,8 @@ RUN \
     {% endif -%}
     python3-pip \
     {% endif -%}
-    zlib1g && \
-  apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl0.10 && \
-  if [ $(arch) = "x86_64" ]; then \
-    echo "**** install intel dependencies ****" && \
-    apt-get install --no-install-recommends -y \
-      intel-media-va-driver-non-free \
-      ocl-icd-libopencl1 && \
-    INTEL_DEPENDENCIES=$(curl -sX GET "https://api.github.com/repos/intel/compute-runtime/releases/latest" | jq -r '.body' | grep wget | grep -v .sum | grep -v .ddeb | sed 's|wget ||g') && \
-    mkdir -p /tmp/intel && \
-    for i in $INTEL_DEPENDENCIES; do \
-      curl -fS --retry 3 --retry-connrefused -o \
-        /tmp/intel/$(basename "${i%$'\r'}") -L \
-        "${i%$'\r'}"; \
-    done && \
-    dpkg -i /tmp/intel/*.deb; \
-  fi && \
+    nodejs \
+    perl && \
   echo "**** download immich ****" && \
   if [ -z ${IMMICH_VERSION} ]; then \
     IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
@@ -189,64 +116,12 @@ RUN \
   tar xf \
     /tmp/immich.tar.gz -C \
     /tmp/immich --strip-components=1 && \
-  if [ -z ${IMMICH_BASE_IMAGE_TAG} ]; then \
-    dockerfile_content=$(cat /tmp/immich/server/Dockerfile) && \
-    date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}') && \
-    if [ -z "$date" ]; then \
-      IMMICH_BASE_IMAGE_TAG="main"; \
-    else \
-      IMMICH_BASE_IMAGE_TAG="$date"; \
-    fi \
-  fi && \
-  echo "**** download immich dependencies ${IMMICH_BASE_IMAGE_TAG} ****" && \
-  curl -o \
-    /tmp/immich-dependencies.tar.gz -L \
-    "https://github.com/immich-app/base-images/archive/${IMMICH_BASE_IMAGE_TAG}.tar.gz" && \
-  tar xf \
-    /tmp/immich-dependencies.tar.gz -C \
-    /tmp/immich-dependencies --strip-components=1 && \
-  echo "**** build immich dependencies ****" && \
-  cd /tmp/immich-dependencies/server/bin && \
-  FFMPEG_VERSION=$(jq -cr '.packages[] | select(.name == "ffmpeg").version' /tmp/immich-dependencies/server/bin/build-lock.json) && \
-  TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
-  curl -o \
-    /tmp/ffmpeg.deb -L \
-    "https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg6_${FFMPEG_VERSION}-noble_${TARGETARCH}.deb" && \
-  apt-get install --no-install-recommends -y -f \
-    /tmp/ffmpeg.deb && \
-  ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
-  ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
-  ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
-  ./build-libheif.sh && \
-  ./build-libraw.sh && \
-  ./build-imagemagick.sh && \
-  ./build-libvips.sh && \
-  mv \
-    /tmp/immich-dependencies/server/bin/build-lock.json \
-    /app/immich/server && \
   {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn9.deb" -L \
     "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb" && \
   dpkg -i "/tmp/libcudnn9.deb" && \
   {% endif -%}
-  echo "**** download geocoding data ****" && \
-  curl -o \
-    /tmp/cities500.zip -L \
-    "https://download.geonames.org/export/dump/cities500.zip" && \
-  curl -o \
-    /app/immich/server/geodata/admin1CodesASCII.txt -L \
-    "https://download.geonames.org/export/dump/admin1CodesASCII.txt" && \
-  curl -o \
-    /app/immich/server/geodata/admin2Codes.txt -L \
-    "https://download.geonames.org/export/dump/admin2Codes.txt" && \
-  curl -o \
-    /app/immich/server/geodata/ne_10m_admin_0_countries.geojson -L \
-    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson" && \
-  unzip \
-    /tmp/cities500.zip -d \
-    /app/immich/server/geodata && \
-  date --iso-8601=seconds | tr -d "\n" > /app/immich/server/geodata/geodata-date.txt && \
   echo "**** copy scripts ****" && \
   cd /tmp/immich/docker && \
   cp -r \
@@ -342,28 +217,7 @@ RUN \
   curl -sSL https://install.python-poetry.org | python3 - --uninstall && \
   {% endif -%}
   apt-get remove -y --purge \
-    autoconf \
-    bc \
     build-essential \
-    cmake \
-    git \
-    libdav1d-dev \
-    libde265-dev \
-    libexif-dev \
-    libexpat1-dev \
-    libglib2.0-dev \
-    libgsf-1-dev \
-    libheif-dev \
-    libjpeg-dev \
-    libjxl-dev \
-    libltdl-dev \
-    liborc-0.4-dev \
-    librsvg2-dev \
-    libspng-dev \
-    libtool \
-    libwebp-dev \
-    meson \
-    pkg-config \
     {% if machine_learning_provider -%}
     {% if machine_learning_provider == "openvino" -%}
     python3.10-dev \
