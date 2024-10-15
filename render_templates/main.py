@@ -4,7 +4,7 @@ import argparse
 import sys
 from jinja2 import Environment, FileSystemLoader
 import os
-from shutil import copytree, rmtree
+from shutil import copyfile, copytree, rmtree
 from typing import List, TypedDict, Optional
 
 
@@ -44,6 +44,7 @@ s6_content = os.path.join(s6_path, "user/contents.d")
 machine_learning_svc = "svc-machine-learning"
 machine_learning_svc_path = os.path.join(s6_path, machine_learning_svc)
 machine_learning_svc_content = os.path.join(s6_content, machine_learning_svc)
+extra_files = ["build-libjxl.sh.patch"]
 
 env = Environment(loader=FileSystemLoader(templates_dir))
 dockerfile_template = env.get_template(dockerfile_template_name)
@@ -106,6 +107,9 @@ def generate_template(
         dockerfile.write(dockerfile_rendered_template)
 
     copytree(os.path.join(output_dir, "root"), root_folder_path)
+
+    for file in extra_files:
+        copyfile(os.path.join(output_dir, file), os.path.join(build_folder, file))
 
     for subfolder in subfolders_templates_run:
         folder_name = os.path.basename(subfolder)
