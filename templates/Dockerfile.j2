@@ -29,6 +29,9 @@ ARG LATEST_UBUNTU_VERSION="oracular"
 LABEL build_version="Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
+# hadolint ignore=DL3045
+COPY build-libjxl.sh.patch /tmp
+
 # environment settings
 ENV \
   IMMICH_ENV="production" \
@@ -206,6 +209,9 @@ RUN \
     /tmp/immich-dependencies.tar.gz -C \
     /tmp/immich-dependencies --strip-components=1 && \
   echo "**** build immich dependencies ****" && \
+  mv \
+    /tmp/build-libjxl.sh.patch \
+    /tmp/immich-dependencies/server/bin && \
   cd /tmp/immich-dependencies/server/bin && \
   FFMPEG_VERSION=$(jq -cr '.packages[] | select(.name == "ffmpeg").version' /tmp/immich-dependencies/server/bin/build-lock.json) && \
   TARGETARCH=${TARGETARCH:=$(dpkg --print-architecture)} && \
@@ -217,6 +223,7 @@ RUN \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
+  patch < build-libjxl.sh.patch && \
   ./build-libjxl.sh && \
   ./build-libheif.sh && \
   ./build-libraw.sh && \
