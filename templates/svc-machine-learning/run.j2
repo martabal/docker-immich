@@ -23,6 +23,7 @@ exec \
   cd /app/immich/machine-learning s6-setuidgid abc \
   gunicorn app.main:app \
     -k uvicorn.workers.UvicornWorker \
+    -c gunicorn_conf.py \
     -w "${MACHINE_LEARNING_WORKERS:-1}" \
     -b "${MACHINE_LEARNING_HOST:-"0.0.0.0"}":"${MACHINE_LEARNING_PORT:-"3003"}" \
     -t "${MACHINE_LEARNING_WORKER_TIMEOUT:-{% if machine_learning_provider == "openvino" -%}300{% else %}120{% endif -%}}" \

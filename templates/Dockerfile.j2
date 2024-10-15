@@ -91,7 +91,6 @@ RUN \
     build-essential \
     cmake \
     git \
-    libdav1d-dev \
     libde265-dev \
     libexif-dev \
     libexpat1-dev \
@@ -99,7 +98,7 @@ RUN \
     libgsf-1-dev \
     libjpeg-dev \
     libltdl-dev \
-    liborc-0.4-dev \
+    libbrotli-dev \
     librsvg2-dev \
     libspng-dev \
     libtool \
@@ -108,7 +107,9 @@ RUN \
     pkg-config \
     unzip && \
   apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl-dev && \
+    libdav1d-dev \
+    libhwy-dev \
+    libwebp-dev && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     {% if machine_learning_provider == "cuda" -%}
@@ -133,13 +134,9 @@ RUN \
     libmimalloc2.0 \
     libopenexr-3-1-30 \
     libopenjp2-7 \
-    liborc-0.4-0 \
     libpng16-16 \
     librsvg2-2 \
     libspng0 \
-    libwebp7 \
-    libwebpdemux2 \
-    libwebpmux3 \
     {% if machine_learning_provider == "armnn" -%}
     mesa-opencl-icd \
     ocl-icd-libopencl1 \
@@ -163,7 +160,10 @@ RUN \
     {% endif -%}
     zlib1g && \
   apt-get install --no-install-recommends -y -t ${LATEST_UBUNTU_VERSION} \
-    libjxl0.10 && \
+    libhwy1t64 \
+    libwebp7 \
+    libwebpdemux2 \
+    libwebpmux3 && \
   if [ $(arch) = "x86_64" ]; then \
     echo "**** install intel dependencies ****" && \
     apt-get install --no-install-recommends -y \
@@ -217,6 +217,7 @@ RUN \
   ldconfig /usr/lib/jellyfin-ffmpeg/lib && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin && \
   ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin && \
+  ./build-libjxl.sh && \
   ./build-libheif.sh && \
   ./build-libraw.sh && \
   ./build-imagemagick.sh && \
@@ -308,10 +309,11 @@ RUN \
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
   cp -a \
-    pyproject.toml \
-    poetry.lock \
     app \
     log_conf.json \
+    gunicorn_conf.py \
+    poetry.lock \
+    pyproject.toml \
     /app/immich/machine-learning && \
   cp -a \
     ann/ann.py \
@@ -354,10 +356,10 @@ RUN \
     libglib2.0-dev \
     libgsf-1-dev \
     libheif-dev \
+    libhwy-dev \
     libjpeg-dev \
-    libjxl-dev \
     libltdl-dev \
-    liborc-0.4-dev \
+    libbrotli-dev \
     librsvg2-dev \
     libspng-dev \
     libtool \
