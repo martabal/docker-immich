@@ -30,6 +30,10 @@ services:
     image: ghcr.io/martabal/immich:latest
     environment: ...
       - IMMICH_MEDIA_LOCATION=/usr/src/app/upload
+    volumes:
+      - path_to_appdata:/config
+      - path_to_photos:/app/immich/server/upload
+      - path_to_libraries:/libraries
 ```
 
 #### If you didn't uploaded assets after migrating from the docker-compose
@@ -63,11 +67,11 @@ Change `DB_DATA_LOCATION` and `UPLOAD_LOCATION` to match the previous host volum
 - `path_to_postgres` &rarr; `DB_DATA_LOCATION`
 - `path_to_photos` &rarr; `UPLOAD_LOCATION`
 
-#### If you have uploaded assets after migrating to the docker-compose
-
-Add a new env `IMMICH_MEDIA_LOCATION=/photos` to your `.env`
-
 #### If you have not uploaded assets after migrating to the docker-compose
+
+Add a new env `IMMICH_MEDIA_LOCATION=/photos` to your `.env` and replace the volume from `- ${UPLOAD_LOCATION}:/usr/src/app/upload` to `- ${UPLOAD_LOCATION}:/photos`
+
+#### If you have uploaded assets after migrating to the docker-compose
 
 Add a new volume to the immich-server container `${UPLOAD_LOCATION}:/photos`
 
