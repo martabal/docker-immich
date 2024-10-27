@@ -140,7 +140,7 @@ services:
 
 #### Intel - OpenVINO
 
-- Make sure your [CPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
+- Make sure your [iGPU/GPU supports OpenVINO](https://docs.openvino.ai/2024/about-openvino/system-requirements.html)
 
 - Docker CLI:
 
