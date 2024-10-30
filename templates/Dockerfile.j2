@@ -104,7 +104,8 @@ RUN \
     python3-pip \
     {% endif -%}
     nodejs \
-    perl && \
+    perl \
+    postgresql-client && \
   echo "**** download immich ****" && \
   if [ -z ${IMMICH_VERSION} ]; then \
     IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
