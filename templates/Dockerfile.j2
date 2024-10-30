@@ -68,7 +68,7 @@ RUN \
     {% endif -%}
     /app/immich/{cli,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
     /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
-  echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
+  echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_22.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
   {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
