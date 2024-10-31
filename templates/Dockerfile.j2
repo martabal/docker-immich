@@ -93,6 +93,10 @@ RUN \
   {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
+  {% elif machine_learning_provider == "cuda" -%}
+  echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" >>/etc/apt/sources.list.d/cuda.list && \
+  curl -s "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub" | gpg --dearmor | tee /usr/share/keyrings/cuda-archive-keyring.gpg >/dev/null && \
+  printf "Package: *\nPin: release l=NVIDIA CUDA\nPin-Priority: 600" > /etc/apt/preferences.d/cuda && \
   {% endif -%}
   echo "**** install build packages ****" && \
   apt-get update && \
@@ -104,6 +108,7 @@ RUN \
     libcublas12 \
     libcublaslt12 \
     libcudart12 \
+    libcudnn9-cuda-12 \
     libcufft11 \
     libcurand10 \
     {% endif -%}
@@ -126,12 +131,6 @@ RUN \
     nodejs=$NODEJS_VERSION \
     perl \
     postgresql-client && \
-  {% if machine_learning_provider == "cuda" -%}
-  echo "**** download libcudnn ****" && \
-  curl -o "/tmp/libcudnn9.deb" -L \
-    "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/libcudnn9-cuda-12_9.3.0.75-1_amd64.deb" && \
-  dpkg -i "/tmp/libcudnn9.deb" && \
-  {% endif -%}
   echo "**** copy scripts ****" && \
   cd /tmp/immich/docker && \
   cp -r \
@@ -246,6 +245,10 @@ RUN \
     {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/deadsnakes.list \
     /usr/share/keyrings/deadsnakes.gpg \
+    {% elif machine_learning_provider == "cuda" -%}
+    /etc/apt/preferences.d/cuda \
+    /etc/apt/sources.list.d/cuda.list \
+    /usr/share/keyrings/cuda-archive-keyring.gpg \
     {% endif -%}
     /root/.cache \
     {% if machine_learning_provider -%}
