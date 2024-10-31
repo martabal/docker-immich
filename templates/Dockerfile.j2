@@ -23,6 +23,7 @@ ARG THIRD_PARTY_SOURCE_URL
 ARG THIRD_PARTY_SUPPORT_URL
 
 ARG IMMICH_VERSION
+ARG NODEJS_VERSION
 
 # hadolint ignore=DL3048
 LABEL build_version="Build-date:- ${BUILD_DATE}"
@@ -60,15 +61,34 @@ ENV \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # run build
-# hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %},SC2046
+# hadolint ignore=DL3003,DL3008{% if machine_learning_provider -%},DL3013{% endif %},SC2046,SC2086
 RUN \
+  echo "**** setup folders ****" && \
   mkdir -p \
     {% if machine_learning_provider == "armnn" -%}
     /etc/OpenCL/vendors \
     {% endif -%}
     /app/immich/{cli,{% if machine_learning_provider -%}machine-learning/ann,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
     /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
-  echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_20.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
+  echo "**** download immich ****" && \
+  if [ -z ${IMMICH_VERSION} ]; then \
+    IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
+      jq -r '.tag_name'); \
+  fi && \
+  curl -o \
+    /tmp/immich.tar.gz -L \
+    "https://github.com/immich-app/immich/archive/${IMMICH_VERSION}.tar.gz" && \
+  tar xf \
+    /tmp/immich.tar.gz -C \
+    /tmp/immich --strip-components=1 && \
+  if [ -z "${NODEJS_VERSION}" ]; then \
+    NODEJS_VERSION="$(cat /tmp/immich/server/.nvmrc)" && \
+    echo "**** detected node version ${NODEJS_VERSION} ****"; \
+  fi && \
+  NODEJS_MAJOR_VERSION=$(echo "$NODEJS_VERSION" | cut -d '.' -f 1) && \
+  NODEJS_VERSION="${NODEJS_VERSION}-1nodesource1" && \
+  echo "**** setup repos ****" && \
+  echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_${NODEJS_MAJOR_VERSION}.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
   {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
@@ -103,20 +123,9 @@ RUN \
     {% endif -%}
     python3-pip \
     {% endif -%}
-    nodejs \
+    nodejs=$NODEJS_VERSION \
     perl \
     postgresql-client && \
-  echo "**** download immich ****" && \
-  if [ -z ${IMMICH_VERSION} ]; then \
-    IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
-      jq -r '.tag_name'); \
-  fi && \
-  curl -o \
-    /tmp/immich.tar.gz -L \
-    "https://github.com/immich-app/immich/archive/${IMMICH_VERSION}.tar.gz" && \
-  tar xf \
-    /tmp/immich.tar.gz -C \
-    /tmp/immich --strip-components=1 && \
   {% if machine_learning_provider == "cuda" -%}
   echo "**** download libcudnn ****" && \
   curl -o "/tmp/libcudnn9.deb" -L \
