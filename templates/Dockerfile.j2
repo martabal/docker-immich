@@ -29,6 +29,11 @@ ARG NODEJS_VERSION
 LABEL build_version="Build-date:- ${BUILD_DATE}"
 LABEL maintainer="martabal"
 
+{% if patches -%}
+# patches
+COPY patches/ /tmp/patches
+{% endif -%}
+
 # environment settings
 ENV \
   IMMICH_ENV="production" \
@@ -101,6 +106,9 @@ RUN \
   echo "**** install build packages ****" && \
   apt-get update && \
   apt-get install --no-install-recommends -y \
+    {% if patches -%}
+    patch \
+    {% endif -%}
     build-essential && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
@@ -136,6 +144,13 @@ RUN \
   cp -r \
     scripts \
     /app/immich/server && \
+  {% if patches -%}
+  echo "**** apply patches ****" && \
+  cd /tmp/immich && \
+  for patch in /tmp/patches/*/*.patch; do \
+    patch -p1 < "$patch"; \
+  done && \
+  {% endif -%}
   echo "**** build server ****" && \
   cd /tmp/immich/server && \
   npm ci --no-fund --no-update-notifier && \
@@ -226,6 +241,9 @@ RUN \
   curl -sSL https://install.python-poetry.org | python3 - --uninstall && \
   {% endif -%}
   apt-get remove -y --purge \
+    {% if patches -%}
+    patch \
+    {% endif -%}
     build-essential \
     {% if machine_learning_provider -%}
     {% if machine_learning_provider == "openvino" -%}
