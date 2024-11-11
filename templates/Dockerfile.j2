@@ -95,6 +95,8 @@ RUN \
   echo "**** setup repos ****" && \
   echo "deb [signed-by=/usr/share/keyrings/nodesource-repo.gpg] https://deb.nodesource.com/node_${NODEJS_MAJOR_VERSION}.x nodistro main" >>/etc/apt/sources.list.d/node.list && \
   curl -s "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor | tee /usr/share/keyrings/nodesource-repo.gpg >/dev/null && \
+  echo "deb [signed-by=/usr/share/keyrings/postgres.gpg] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+  curl -s "https://www.postgresql.org/media/keys/ACCC4CF8.asc" | gpg --dearmor | tee /usr/share/keyrings/postgres.gpg >/dev/null && \
   {% if machine_learning_provider == "openvino" -%}
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
@@ -138,7 +140,10 @@ RUN \
     {% endif -%}
     nodejs=$NODEJS_VERSION \
     perl \
-    postgresql-client && \
+    postgresql-client-14 \
+    postgresql-client-15 \
+    postgresql-client-16 \
+    postgresql-client-17 && \
   echo "**** copy scripts ****" && \
   cd /tmp/immich/docker && \
   cp -r \
@@ -260,6 +265,7 @@ RUN \
   apt-get clean && \
   rm -rf \
     /etc/apt/sources.list.d/node.list \
+    /etc/apt/sources.list.d/pgdg.list \
     {% if machine_learning_provider == "openvino" -%}
     /etc/apt/sources.list.d/deadsnakes.list \
     /usr/share/keyrings/deadsnakes.gpg \
@@ -275,6 +281,7 @@ RUN \
     /root/.npm \
     /tmp/* \
     /usr/share/keyrings/nodesource-repo.gpg \
+    /usr/share/keyrings/postgres.gpg \
     /var/lib/apt/lists/* \
     /var/log/* \
     /var/tmp/*
