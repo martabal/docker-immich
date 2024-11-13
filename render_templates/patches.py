@@ -51,7 +51,7 @@ def get_matching_patches(folder_path, current_version) -> Patches:
                 with open(json_file_path, "r") as json_file:
                     data = json.load(json_file)
                     version_range = data.get("version").lstrip("v")
-                    if version_range == version_range:
+                    if version_range == current_version:
                         patch_file_content = open(patch_file_path, "r").read()
                         apply_to_project: Optional[PatchType] = extract_source_project(
                             patch_file_content
