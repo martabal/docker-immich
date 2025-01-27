@@ -19,33 +19,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Python
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Setup poetry
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-          cache: "poetry"
-
-      - name: Install python dependencies
-        run: poetry install --with dev,test
+          python-version-file: pyproject.toml
 
       - name: Run python linter
-        run: poetry run ruff check render_templates
+        run: uv run ruff check render_templates
         if: ${{ !cancelled() }}
 
       - name: Run python formatter
-        run: poetry run ruff format --check render_templates
+        run: uv run ruff format --check render_templates
         if: ${{ !cancelled() }}
 
       - name: Run tests and coverage
-        run: poetry run pytest render_templates
+        run: uv run pytest render_templates
         if: ${{ !cancelled() }}
 
   Linter:
@@ -59,25 +50,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Setup poetry
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-          cache: "poetry"
+      - name: Set up Python
+        run: uv python install
 
       - name: Install python dependencies
-        run: poetry install --without dev,test
+        run: uv pip install -r pyproject.toml
 
       - name: Create Dockerfile from template
-        run: poetry run python3 render_templates/main.py --flavor ${{ matrix.flavor }}
+        run: uv run python3 -m render_templates.main --flavor ${{ matrix.flavor }}
 
       - name: Run Hadolint
         uses: hadolint/hadolint-action@v3.1.0
