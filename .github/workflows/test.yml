@@ -27,6 +27,11 @@ jobs:
         with:
           python-version-file: pyproject.toml
 
+      - name: Install python dependencies
+        run: |
+          uv venv 
+          uv sync
+
       - name: Run python linter
         run: uv run ruff check render_templates
         if: ${{ !cancelled() }}
@@ -54,10 +59,14 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Set up Python
-        run: uv python install
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
 
       - name: Install python dependencies
-        run: uv pip install -r pyproject.toml
+        run: |
+          uv venv
+          uv pip install -r pyproject.toml
 
       - name: Create Dockerfile from template
         run: uv run python3 -m render_templates.main --flavor ${{ matrix.flavor }}
