@@ -2,7 +2,7 @@
 name = "docker-immich"
 version = "0.1.1"
 description = "AIO image for Immich"
-authors = [{name = "martabal",email = "<74269598+martabal@users.noreply.github.com>"}]
+authors = [{name = "martabal",email = "74269598+martabal@users.noreply.github.com"}]
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
