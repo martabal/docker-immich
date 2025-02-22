@@ -110,6 +110,9 @@ RUN \
     {% if patches -%}
     patch \
     {% endif -%}
+    {% if machine_learning_provider == "armnn" -%}
+    binutils \
+    {% endif -%}
     build-essential && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
@@ -215,7 +218,7 @@ RUN \
   {% if machine_learning_provider == "armnn" -%}
   curl -o \
     /tmp/armnn.tar.gz -L \
-    "https://github.com/ARM-software/armnn/releases/download/v23.11/ArmNN-linux-aarch64.tar.gz" && \
+    "https://github.com/ARM-software/armnn/releases/download/v24.05/ArmNN-linux-aarch64.tar.gz" && \
   tar xf \
     /tmp/armnn.tar.gz -C \
     /tmp/armnn && \
@@ -237,6 +240,9 @@ RUN \
   apt-get remove -y --purge \
     {% if patches -%}
     patch \
+    {% endif -%}
+    {% if machine_learning_provider == "armnn" -%}
+    binutils \
     {% endif -%}
     build-essential \
     {% if machine_learning_provider -%}
