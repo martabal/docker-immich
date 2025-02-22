@@ -111,7 +111,7 @@ RUN \
     patch \
     {% endif -%}
     {% if machine_learning_provider == "armnn" -%}
-    binutils \
+    binutils-gold \
     {% endif -%}
     build-essential && \
   echo "**** install runtime packages ****" && \
@@ -242,7 +242,7 @@ RUN \
     patch \
     {% endif -%}
     {% if machine_learning_provider == "armnn" -%}
-    binutils \
+    binutils-gold \
     {% endif -%}
     build-essential \
     {% if machine_learning_provider -%}
