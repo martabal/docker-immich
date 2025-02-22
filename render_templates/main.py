@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 from typing import List, TypedDict, Optional
-from render_templates.patches import (
+from .patches import (
     ApplyPatches,
     PatchType,
     Patches,
