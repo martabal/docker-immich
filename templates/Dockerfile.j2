@@ -129,9 +129,9 @@ RUN \
     ocl-icd-libopencl1 \
     {% endif -%}
     {% if machine_learning_provider -%}
-    python3.10 \
-    python3.10-dev \
-    python3.10-venv \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
     python3-pip \
     python3-poetry \
     {% endif -%}
@@ -203,7 +203,7 @@ RUN \
   {% if machine_learning_provider -%}
   echo "**** build machine-learning ****" && \
   cd /tmp/immich/machine-learning && \
-  python3.10 -m venv /lsiopy && \
+  python3.11 -m venv /lsiopy && \
   poetry config installer.max-workers 10 && \
   poetry config virtualenvs.create false && \
   cp -a \
@@ -246,8 +246,8 @@ RUN \
     {% endif -%}
     build-essential \
     {% if machine_learning_provider -%}
-    python3.10-dev \
-    python3.10-venv \
+    python3.11-dev \
+    python3.11-venv \
     python3-pip \
     python3-poetry \
     {% endif -%}
