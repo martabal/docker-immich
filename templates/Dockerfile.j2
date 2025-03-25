@@ -114,6 +114,9 @@ RUN \
     {% if machine_learning_provider == "armnn" -%}
     binutils-gold \
     {% endif -%}
+    {% if machine_learning_provider == "openvino" -%}
+    execstack \
+    {% endif -%}
     build-essential && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
@@ -245,6 +248,9 @@ RUN \
   echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
   echo "ulimit -S -c 0 > /dev/null 2>&1" >> /etc/profile && \
   /tmp/uv sync --active --frozen --extra {{ machine_learning_provider }} --no-dev --no-editable --no-install-project --compile-bytecode --no-progress && \
+  {% if machine_learning_provider == "openvino" -%}
+  find /lsiopy/lib -name "*linux-gnu.so" -exec execstack -c {} \; && \
+  {% endif -%}
   {% endif -%}
   echo "**** cleanup ****" && \
   apt-get remove -y --purge \
@@ -255,6 +261,9 @@ RUN \
     binutils-gold \
     {% endif -%}
     build-essential \
+    {% if machine_learning_provider == "openvino" -%}
+    execstack \
+    {% endif -%}
     {% if machine_learning_provider -%}
     python3.11-dev \
     {% endif -%}
