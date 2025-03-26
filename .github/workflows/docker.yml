@@ -107,7 +107,7 @@ jobs:
               /tmp/immich.tar.gz -C \
               /tmp/immich --strip-components=1 && \
             dockerfile_content=$(cat /tmp/immich/server/Dockerfile)
-            date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}')
+            date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K[^@]+(?=@)')
             if [ -z "$date" ]; then
               base_image_tag="latest";
             else
