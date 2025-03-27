@@ -52,7 +52,6 @@ ENV \
   IMMICH_BUILD_IMAGE_URL=${BUILD_IMAGE_URL} \
   IMMICH_BUILD_URL=${BUILD_URL} \
   IMMICH_MEDIA_LOCATION="/photos" \
-  IMMICH_PORT="8080" \
   IMMICH_REPOSITORY=${BUILD_REPOSITORY} \
   IMMICH_REPOSITORY_URL=${BUILD_REPOSITORY_URL} \
   IMMICH_SOURCE_COMMIT=${BUILD_SOURCE_COMMIT} \
@@ -220,14 +219,10 @@ RUN \
     /tmp --strip-components=1 && \
   cd /tmp/immich/machine-learning && \
   cp -a \
+    immich_ml \
     pyproject.toml \
-    app \
-    log_conf.json \
     uv.lock \
     /app/immich/machine-learning && \
-  cp -a \
-    ann/ann.py \
-    /app/immich/machine-learning/ann && \
   {% if machine_learning_provider == "armnn" -%}
   curl -o \
     /tmp/armnn.tar.gz -L \
