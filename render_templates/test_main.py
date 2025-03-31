@@ -21,7 +21,7 @@ def run_around_tests():
 
 
 def test_count_dependencies():
-    assert len(App.flavors) == 5
+    assert len(App.flavors) == 6
 
 
 def test_create_all_dependencies():
