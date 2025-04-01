@@ -22,6 +22,10 @@ class Flavor(TypedDict):
 class App:
     flavors: List[Flavor] = [
         {
+            "name": "rknn",
+            "machine_learning_provider": "rknn",
+        },
+        {
             "name": "armnn",
             "machine_learning_provider": "armnn",
         },

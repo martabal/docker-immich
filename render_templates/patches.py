@@ -30,7 +30,7 @@ class PatchType(Enum):
 
 
 def extract_source_project(diff_text):
-    match = re.search(r"diff --git a/([^/]+)/", diff_text)
+    match = re.search(r"diff --git \w/([^/]+)/", diff_text)
     if match:
         project = (
             PatchType.ML if match.group(1) == "machine-learning" else match.group(1)
