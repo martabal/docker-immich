@@ -10,7 +10,10 @@
 
 ## What is it ?
 
-This repo is a fork of the official [AIO image for Immich](https://github.com/imagegenius/docker-immich). Its main goal is to provide docker images with pre-installed machine learning support for CUDA and openvino.
+This repo is a fork of the official [AIO image for Immich](https://github.com/imagegenius/docker-immich). Its primary goal is to provide docker images that are always up to date with the upstream project and to support all officially supported platforms for machine learning.
+
+> [!IMPORTANT]  
+> **This image is not officially supported by the Immich team.**
 
 ## Version Tags
 
@@ -24,6 +27,9 @@ This image offers different versions via tags. Be cautious when using unstable o
 |   cuda   |   ✅   |  ❌   | Latest Immich release and support for cuda for machine-learning acceleration (Nvidia).                                       |
 |   noml   |   ✅   |  ✅   | Latest Immich release without machine-learning.                                                                              |
 | openvino |   ✅   |  ❌   | Latest Immich release and support for openvino for machine-learning acceleration (Intel).                                    |
+
+> [!NOTE]  
+> ROCm (software stack for AMD GPUs) is currently not supported.
 
 ## Application Setup
 
