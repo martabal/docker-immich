@@ -112,6 +112,7 @@ jobs:
               /tmp/immich --strip-components=1 && \
             dockerfile_content=$(cat /tmp/immich/server/Dockerfile)
             date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K[^@]+(?=@)')
+            echo "immich base image detected: ${date}"
             if [ -z "$date" ]; then
               base_image_tag="latest";
             else
