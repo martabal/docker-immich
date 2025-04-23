@@ -35,7 +35,7 @@ This image offers different versions via tags. Be cautious when using unstable o
 
 The WebUI can be accessed at `http://your-ip:8080` Follow the wizard to set up Immich.
 
-To use Immich, you need to have PostgreSQL 14/15/16 server with [pgvecto.rs](https://github.com/tensorchord/pgvecto.rs) set up externally, and Redis set up externally or within the container using a docker mod.
+To use Immich, you need to have PostgreSQL 14/15/16 server with [pgvecto.rs](https://github.com/tensorchord/pgvecto.rs) set up externally.
 
 To use a SSL connection to your PostgreSQL database, include a PostgreSQL URL in the `DB_URL` environment variable.
 
@@ -199,10 +199,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - DB_DATABASE_NAME=immich
-      - REDIS_HOSTNAME=192.168.1.x
       - DB_PORT=5432 #optional
-      - REDIS_PORT=6379 #optional
-      - REDIS_PASSWORD= #optional
       - MACHINE_LEARNING_HOST=0.0.0.0 #optional
       - MACHINE_LEARNING_PORT=3003 #optional
       - MACHINE_LEARNING_WORKERS=1 #optional
@@ -216,13 +213,6 @@ services:
     restart: unless-stopped
   # This container requires an external application to be run separately to be run separately.
   # By default, ports for the databases are opened, be careful when deploying it
-  # Redis:
-  redis:
-    image: redis
-    ports:
-      - 6379:6379
-    container_name: redis
-  # PostgreSQL 14:
   postgres14:
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
     ports:
@@ -248,10 +238,7 @@ docker run -d \
   -e DB_USERNAME=postgres \
   -e DB_PASSWORD=postgres \
   -e DB_DATABASE_NAME=immich \
-  -e REDIS_HOSTNAME=192.168.1.x \
   -e DB_PORT=5432 `#optional` \
-  -e REDIS_PORT=6379 `#optional` \
-  -e REDIS_PASSWORD= `#optional` \
   -e MACHINE_LEARNING_HOST=0.0.0.0 `#optional` \
   -e MACHINE_LEARNING_PORT=3003 `#optional` \
   -e MACHINE_LEARNING_WORKERS=1 `#optional` \
@@ -265,13 +252,6 @@ docker run -d \
 
 # This container requires an external application to be run separately.
 # By default, ports for the databases are opened, be careful when deploying it
-# Redis:
-docker run -d \
-  --name=redis \
-  -p 6379:6379 \
-  redis
-
-# PostgreSQL 14:
 docker run -d \
   --name=postgres14 \
   -e POSTGRES_USER=postgres \
@@ -297,10 +277,7 @@ To configure the container, pass variables at runtime using the format `<externa
 |        `-e DB_USERNAME=postgres`         | PostgreSQL Username                                                                                            |
 |        `-e DB_PASSWORD=postgres`         | PostgreSQL Password                                                                                            |
 |       `-e DB_DATABASE_NAME=immich`       | PostgreSQL Database Name                                                                                       |
-|     `-e REDIS_HOSTNAME=192.168.1.x`      | Redis Hostname                                                                                                 |
 |            `-e DB_PORT=5432`             | PostgreSQL Port                                                                                                |
-|           `-e REDIS_PORT=6379`           | Redis Port                                                                                                     |
-|           `-e REDIS_PASSWORD=`           | Redis password                                                                                                 |
 |    `-e MACHINE_LEARNING_HOST=0.0.0.0`    | Immich machine-learning host                                                                                   |
 |     `-e MACHINE_LEARNING_PORT=3003`      | Immich machine-learning port                                                                                   |
 |     `-e MACHINE_LEARNING_WORKERS=1`      | Machine learning workers                                                                                       |
