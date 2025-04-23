@@ -172,11 +172,11 @@ RUN \
   npm link && \
   npm cache clean --force && \
   cp -a \
-    resources \
+    dist \
+    node_modules \
     package.json \
     package-lock.json \
-    node_modules \
-    dist \
+    resources \
     /app/immich/server && \
   echo "**** build open-api ****" && \
   cd /tmp/immich/open-api/typescript-sdk && \
@@ -186,8 +186,12 @@ RUN \
   cd /tmp/immich/web && \
   npm ci --no-fund --no-update-notifier && \
   npm run build && \
+  npm prune --omit=dev --omit=optional && \
   cp -a \
     build/* \
+    node_modules \
+    package.json \
+    package-lock.json \
     static \
     /app/immich/server/www && \
   echo "**** build CLI ****" && \
@@ -196,10 +200,10 @@ RUN \
   npm run build && \
   npm prune --omit=dev --omit=optional && \
   cp -a \
+    dist \
+    node_modules \
     package.json \
     package-lock.json \
-    node_modules \
-    dist \
     /app/immich/cli && \
   {% if machine_learning_provider -%}
   echo "**** build machine-learning ****" && \
