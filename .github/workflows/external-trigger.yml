@@ -4,6 +4,7 @@ on:
     - cron: "*/20 * * * *"
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.check_version.outputs.new_version }}
-      immich_version: ${{ steps.check_version.outputs.immich_version }}
+      version: ${{ steps.check_version.outputs.version }}
       current_version: ${{ steps.check_version.outputs.current_version }}
     steps:
       - uses: actions/checkout@v4
@@ -27,15 +28,29 @@ jobs:
         id: check_version
         run: |
           git fetch --tags
-          current_version=version=$(git describe --tags $(git rev-list --tags --max-count=1))
+          current_version=$(git describe --tags $(git rev-list --tags --max-count=1))
           mkdir check_version
           cd check_version
           git init
           git remote add origin https://github.com/immich-app/immich.git
           git fetch --tags https://github.com/immich-app/immich.git
           version=$(git describe --tags $(git rev-list --tags --max-count=1))
-          echo "current version: $current_version"
-          echo "immich version: $immich_version"
+          cd ..
+          if [ "$current_version" != "$version" ]; then
+            if git tag | grep -q "^$version$"; then
+              echo "Tag '$version' exists."
+            else
+              echo "New immich version ($version) detected."
+              echo "current version: $current_version"
+              echo "upstream version: $version"
+              echo "current_version=$current_version" >> $GITHUB_OUTPUT
+              echo "version=$version" >> $GITHUB_OUTPUT
+              echo "new_version=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          else
+            echo "Immich version ($version) already exists"
+          fi
           echo "new_version=false" >> $GITHUB_OUTPUT
 
   create_new_version:
@@ -49,16 +64,16 @@ jobs:
 
       - name: Create tag
         run: |
-          git tag "${{ needs.check_new_version.outputs.immich_version }}"
+          git tag "${{ needs.check_new_version.outputs.version }}"
           git push --tags
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ needs.check_new_version.outputs.immich_version }} \
+          gh release create ${{ needs.check_new_version.outputs.version }} \
             --generate-notes \
-            --notes "Read Immich release notes [here](https://github.com/immich-app/immich/releases/tag/${{ needs.check_new_version.outputs.immich_version }})"
+            --notes "Read Immich release notes [here](https://github.com/immich-app/immich/releases/tag/${{ needs.check_new_version.outputs.version }})"
 
       - name: Get base image tag
         id: tag
@@ -66,16 +81,16 @@ jobs:
           mkdir /tmp/immich
           curl -o \
             /tmp/immich.tar.gz -L \
-            "https://github.com/immich-app/immich/archive/${{ needs.check_new_version.outputs.immich_version }}.tar.gz" && \
+            "https://github.com/immich-app/immich/archive/${{ needs.check_new_version.outputs.version }}.tar.gz" && \
           tar xf \
             /tmp/immich.tar.gz -C \
             /tmp/immich --strip-components=1 && \
           dockerfile_content=$(cat /tmp/immich/server/Dockerfile)
-          date=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}')
-          if [ -z "$date" ]; then
+          base_image_tag_in_dockerfile=$(echo "$dockerfile_content" | grep -oP 'base-server-prod:\K\d{8}')
+          if [ -z "$base_image_tag_in_dockerfile" ]; then
             base_image_tag="latest";
           else
-            base_image_tag="$date";
+            base_image_tag="$base_image_tag_in_dockerfile";
           fi
           echo "base_image_tag=${base_image_tag}" >> $GITHUB_OUTPUT
 
@@ -83,4 +98,4 @@ jobs:
         if: github.event_name != 'push'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run docker.yml -f version=${{ needs.check_new_version.outputs.immich_version }} -f base_image_tag=${{ steps.tag.outputs.base_image_tag }}
+        run: gh workflow run docker.yml -f version=${{ needs.check_new_version.outputs.version }} -f base_image_tag=${{ steps.tag.outputs.base_image_tag }}
