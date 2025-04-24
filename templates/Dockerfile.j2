@@ -36,6 +36,7 @@ COPY patches/ /tmp/patches
 
 # environment settings
 ENV \
+  SHARP_FORCE_GLOBAL_LIBVIPS=true \
   IMMICH_ENV="production" \
   {% if machine_learning_provider -%}
   DEVICE="{{ machine_learning_provider }}" \
@@ -116,7 +117,13 @@ RUN \
     {% if machine_learning_provider == "openvino" -%}
     execstack \
     {% endif -%}
-    build-essential && \
+    libexif-dev \
+    libexpat1-dev \
+    libglib2.0-dev \
+    libjpeg-dev \
+    librsvg2-dev \
+    libspng-dev \
+    pkg-config && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
     {% if machine_learning_provider == "cuda" -%}
@@ -266,6 +273,15 @@ RUN \
     {% if machine_learning_provider -%}
     python3.11-dev \
     {% endif -%}
+    libexif-dev \
+    libexpat1-dev \
+    libglib2.0-dev \
+    libhwy-dev \
+    libjpeg-dev \
+    librsvg2-dev \
+    libspng-dev \
+    libwebp-dev \
+    pkg-config \
     unzip && \
   apt-get autoremove -y --purge && \
   apt-get clean && \

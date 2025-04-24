@@ -57,6 +57,7 @@ class App:
     machine_learning_svc = "svc-machine-learning"
     machine_learning_svc_path = os.path.join(s6_path, machine_learning_svc)
     machine_learning_svc_content = os.path.join(s6_content, machine_learning_svc)
+    dependencies_folder = "dependencies.d"
 
     env = Environment(loader=FileSystemLoader(templates_dir))
     dockerfile_template = env.get_template(dockerfile_template_name)
@@ -192,6 +193,15 @@ def generate_template(
                     App.machine_learning_svc_content,
                 )
             )
+            for dirpath, _, _ in os.walk(root_folder_path, topdown=False):
+                if os.path.basename(dirpath) == App.dependencies_folder:
+                    svc_path = os.path.join(dirpath, App.machine_learning_svc)
+                    if os.path.isfile(svc_path):
+                        os.remove(svc_path)
+
+                    if not os.listdir(dirpath):
+                        os.rmdir(dirpath)
+
     print(f" - Dockerfile and context for {flavor_name} generated successfully.")
 
 
