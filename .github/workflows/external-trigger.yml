@@ -29,27 +29,28 @@ jobs:
         run: |
           git fetch --tags
           current_version=$(git describe --tags $(git rev-list --tags --max-count=1))
-          mkdir check_version
-          cd check_version
-          git init
-          git remote add origin https://github.com/immich-app/immich.git
-          git fetch --tags https://github.com/immich-app/immich.git
-          version=$(git describe --tags $(git rev-list --tags --max-count=1))
-          cd ..
-          if [ "$current_version" != "$version" ]; then
-            if git tag | grep -q "^$version$"; then
-              echo "Tag '$version' exists."
+          if upstream_version=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | jq -r '.tag_name'); then
+            if [ -n "$upstream_version" ] && [ "$upstream_version" != "null" ]; then
+              if [ "$current_version" != "$upstream_version" ]; then
+                if git tag | grep -q "^$version$"; then
+                  echo "Tag '$version' exists."
+                else
+                  echo "New immich version ($version) detected."
+                  echo "current version: $current_version"
+                  echo "upstream version: $upstream_version"
+                  echo "current_version=$current_version" >> $GITHUB_OUTPUT
+                  echo "version=$upstream_version" >> $GITHUB_OUTPUT
+                  echo "new_version=true" >> $GITHUB_OUTPUT
+                  exit 0
+                fi
+              else
+                echo "Immich version ($upstream_version) already exists"
+              fi
             else
-              echo "New immich version ($version) detected."
-              echo "current version: $current_version"
-              echo "upstream version: $version"
-              echo "current_version=$current_version" >> $GITHUB_OUTPUT
-              echo "version=$version" >> $GITHUB_OUTPUT
-              echo "new_version=true" >> $GITHUB_OUTPUT
-              exit 0
+              echo "version is not set: $upstream_version" 
             fi
           else
-            echo "Immich version ($version) already exists"
+            echo "curl failed" 
           fi
           echo "new_version=false" >> $GITHUB_OUTPUT
 
