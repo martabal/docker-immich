@@ -224,7 +224,7 @@ services:
     container_name: redis
   # PostgreSQL 14:
   postgres14:
-    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
     ports:
       - 5432:5432
     container_name: postgres14
@@ -232,6 +232,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: immich
+      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
+      # -e DB_STORAGE_TYPE: 'HDD' \
     volumes:
       - path_to_postgres:/var/lib/postgresql/data
 ```
@@ -277,9 +279,11 @@ docker run -d \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=immich \
+  # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
+  # -e DB_STORAGE_TYPE: 'HDD' \
   -v path_to_postgres:/var/lib/postgresql/data \
   -p 5432:5432 \
-  tensorchord/pgvecto-rs:pg14-v0.2.0
+  ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
 
 ```
 
