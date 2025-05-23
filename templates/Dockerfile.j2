@@ -75,7 +75,7 @@ RUN \
     /etc/OpenCL/vendors \
     {% endif -%}
     /app/immich/{cli,{% if machine_learning_provider -%}machine-learning,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
-    /tmp/{immich-build/web,immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
+    /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "**** download immich ****" && \
   if [ -z ${IMMICH_VERSION} ]; then \
     IMMICH_VERSION=$(curl -sL https://api.github.com/repos/immich-app/immich/releases/latest | \
@@ -185,33 +185,20 @@ RUN \
     node_modules \
     dist \
     /app/immich/server && \
-  echo "**** setup build folders ****" && \
-  cp -a \
-    /tmp/immich/open-api \
-    /tmp/immich/i18n \
-    /tmp/immich/cli \
-    /tmp/immich-build && \
   echo "**** build open-api ****" && \
-  cd /tmp/immich-build/open-api/typescript-sdk && \
+  cd /tmp/immich/open-api/typescript-sdk && \
   npm ci --no-fund --no-update-notifier && \
   npm run build && \
   echo "**** build web ****" && \
-  cd /tmp/immich-build/web && \
-  cp -a \
-    /tmp/immich/web/package*.json \
-    /tmp/immich/web/svelte.config.js \
-    /tmp/immich-build/web && \
+  cd /tmp/immich/web && \
   npm ci --no-fund --no-update-notifier && \
-  cp -a \
-    /tmp/immich/web/* \
-    /tmp/immich-build/web && \
   npm run build && \
   cp -a \
     build/* \
     static \
     /app/immich/server/www && \
   echo "**** build CLI ****" && \
-  cd /tmp/immich-build/cli && \
+  cd /tmp/immich/cli && \
   npm ci --no-fund --no-update-notifier && \
   npm run build && \
   npm prune --omit=dev --omit=optional && \
