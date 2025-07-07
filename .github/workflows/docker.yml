@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
 
       - name: Set tags
         id: tags
@@ -113,7 +113,7 @@ jobs:
           echo "base_image_tag=${base_image_tag}" >> $GITHUB_OUTPUT
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6.2.1
+        uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba #v6.3.1
 
       - name: Install python dependencies
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Generate docker image tags
         id: metadata
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 #v5.7.0
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/immich
@@ -140,20 +140,20 @@ jobs:
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 #v3.6.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 #v3.11.1
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push docker images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v6.18.0
         with:
           context: build-${{ matrix.image }}
           provenance: false # prevent unknown architecture
