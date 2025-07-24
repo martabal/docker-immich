@@ -74,7 +74,7 @@ RUN \
     {% if machine_learning_provider == "armnn" -%}
     /etc/OpenCL/vendors \
     {% endif -%}
-    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/www} \
+    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server/{bin,www}} \
     /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "**** download immich ****" && \
   if [ -z ${IMMICH_VERSION} ]; then \
@@ -151,10 +151,10 @@ RUN \
     postgresql-client-16 \
     postgresql-client-17 && \
   echo "**** copy scripts ****" && \
-  cd /tmp/immich/docker && \
+  cd /tmp/immich/server/bin && \
   cp -r \
-    scripts \
-    /app/immich/server && \
+    get-cpus.sh \
+    /app/immich/server/bin && \
   {% if patches -%}
   echo "**** apply patches ****" && \
   cd /tmp/immich && \

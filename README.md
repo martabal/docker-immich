@@ -48,7 +48,6 @@ To use Intel Quicksync hardware acceleration:
 - Ensure your container has access to the `/dev/dri` video device.
 
 - Add the device to your container by including the following option:
-
   - Docker CLI:
 
     ```bash
@@ -75,7 +74,6 @@ To use Nvidia hardware acceleration:
 - Recreate or create a new Docker container using the Nvidia runtime. This can be done in two ways:
 
 - Add both `--runtime=nvidia` and `NVIDIA_VISIBLE_DEVICES=all` to your Docker run command. Replace `all` with a specific GPU's UUID if needed:
-
   - Docker CLI:
 
     ```bash
@@ -96,7 +94,6 @@ To use Nvidia hardware acceleration:
   ```
 
 - Alternatively, use `--gpus=all`:
-
   - Docker CLI:
 
     ```bash
