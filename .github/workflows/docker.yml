@@ -23,8 +23,8 @@ on:
       - "templates/**"
       - "root/**"
       - ".github/**"
-  schedule:
-    - cron: "0 12 * * 3"
+  # schedule:
+  #   - cron: "0 12 * * 3"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
