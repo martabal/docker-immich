@@ -170,7 +170,7 @@ RUN \
     --filter immich \
     --frozen-lockfile \
     build && \
-  pnpm \
+  SHARP_FORCE_GLOBAL_LIBVIPS=true pnpm \
     --filter immich \
     --frozen-lockfile \
     --prod \
