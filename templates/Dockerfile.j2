@@ -145,6 +145,10 @@ RUN \
     libgomp1 \
     {% endif -%}
     {% if machine_learning_provider -%}
+    ccache \
+    libgl1 \
+    libglib2.0-0 \
+    libgomp1 \
     python3.11 \
     python3.11-dev \
     {% endif -%}
