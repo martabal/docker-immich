@@ -113,7 +113,7 @@ jobs:
           echo "base_image_tag=${base_image_tag}" >> $GITHUB_OUTPUT
 
       - name: Install uv
-        uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b #v6.6.0
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 #v7.1.2
 
       - name: Install python dependencies
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Generate docker image tags
         id: metadata
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f #v5.8.0
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 #v5.9.0
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/immich
@@ -140,13 +140,13 @@ jobs:
             type=raw,value=${{ steps.tags.outputs.immich_version }},enable=${{ github.event_name != 'pull_request' }},suffix=${{ matrix.suffix }}-${{ steps.tags.outputs.short_date }}-${{ steps.tags.outputs.commit }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 #v3.6.0
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 #v3.7.0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 #v3.11.1
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 #v3.5.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
