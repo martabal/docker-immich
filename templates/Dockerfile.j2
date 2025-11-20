@@ -40,6 +40,9 @@ ENV \
   DEVICE="{{ machine_learning_provider }}" \
   IMMICH_MACHINE_LEARNING_URL="http://127.0.0.1:3003" \
   MACHINE_LEARNING_CACHE_FOLDER="/config/machine-learning" \
+  MISE_TRUSTED_CONFIG_PATHS="/app/immich/plugins/mise.toml"\
+  MISE_DATA_DIR="/buildcache/mise" \
+  NODE_OPTIONS="--max-old-space-size=8192" \
   TRANSFORMERS_CACHE="/config/machine-learning" \
   UV_PYTHON="/usr/bin/python3.11" \
   {% else -%}
@@ -78,7 +81,7 @@ RUN \
     {% if machine_learning_provider == "armnn" -%}
     /etc/OpenCL/vendors \
     {% endif -%}
-    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}server} \
+    /app/immich/{cli,{% if machine_learning_provider -%}machine-learning,{% if machine_learning_provider == "armnn"-%}armnn,{% endif -%}{% endif -%}plugins,server} \
     /tmp/{immich,node_modules{% if machine_learning_provider == "armnn"-%},armnn{% endif -%}} && \
   echo "**** download immich ****" && \
   if [ -z ${IMMICH_VERSION} ]; then \
@@ -104,6 +107,8 @@ RUN \
   curl -s "https://www.postgresql.org/media/keys/ACCC4CF8.asc" | gpg --dearmor | tee /usr/share/keyrings/postgres.gpg >/dev/null && \
   echo "deb [signed-by=/usr/share/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble main" >>/etc/apt/sources.list.d/deadsnakes.list && \
   curl -s "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor | tee /usr/share/keyrings/deadsnakes.gpg >/dev/null && \
+  echo "deb [signed-by=/usr/share/keyrings/mise-archive-keyring.pub] https://mise.jdx.dev/deb stable main" >>/etc/apt/sources.list.d/mise.list && \
+  curl -fSs "https://mise.jdx.dev/gpg-key.pub" | tee /usr/share/keyrings/mise-archive-keyring.pub 1> /dev/null && \
   {% if machine_learning_provider == "cuda" -%}
   echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" >>/etc/apt/sources.list.d/cuda.list && \
   curl -s "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub" | gpg --dearmor | tee /usr/share/keyrings/cuda-archive-keyring.gpg >/dev/null && \
@@ -128,6 +133,7 @@ RUN \
     libjpeg-dev \
     librsvg2-dev \
     libspng-dev \
+    mise \
     pkg-config && \
   echo "**** install runtime packages ****" && \
   apt-get install --no-install-recommends -y \
@@ -168,6 +174,32 @@ RUN \
   echo "**** setup pnpm ****" && \
   npm install --global corepack@latest && \
   corepack enable pnpm && \
+  echo "**** setup plugins (mise) ****" && \
+  cp -a \
+    /tmp/immich/plugins/mise.toml \
+    /app/immich/plugins && \
+  mise install --cd /app/immich/plugins && \
+  echo "**** build plugins (mise) ****" && \
+  cp -a \
+    /tmp/immich/plugins/* \
+    /app/immich/plugins && \
+  cp -a \
+    /tmp/immich/.pnpmfile.cjs \
+    /app/immich/plugins && \
+  cp -a \
+    /tmp/immich/pnpm-lock.yaml \
+    /app/immich/plugins && \
+  cp -a \
+    /tmp/immich/pnpm-workspace.yaml \
+    /app/immich/plugins && \
+  cat /app/immich/plugins/package.json && \
+  sed -i 's/pnpm install --frozen-lockfile/pnpm install --no-frozen-lockfile/' /app/immich/plugins/mise.toml && \
+  mise run build --cd /app/immich/plugins && \
+  mkdir -p \
+    /app/immich/data/corePlugin && \
+  cp -a \
+    /app/immich/plugins/* \
+    /app/immich/data/corePlugin && \  
   echo "**** build server ****" && \
   cd /tmp/immich && \
   SHARP_IGNORE_GLOBAL_LIBVIPS=true pnpm \
@@ -296,11 +328,13 @@ RUN \
     librsvg2-dev \
     libspng-dev \
     libwebp-dev \
+    mise \
     pkg-config \
     unzip && \
   apt-get autoremove -y --purge && \
   apt-get clean && \
   rm -rf \
+    /etc/apt/sources.list.d/mise.list \
     /etc/apt/sources.list.d/node.list \
     /etc/apt/sources.list.d/pgdg.list \
     /etc/apt/sources.list.d/deadsnakes.list \
@@ -316,6 +350,7 @@ RUN \
     {% endif -%}
     /root/.npm \
     /tmp/* \
+    /usr/share/keyrings/mise-archive-keyring.pub \
     /usr/share/keyrings/nodesource-repo.gpg \
     /usr/share/keyrings/postgres.gpg \
     /var/lib/apt/lists/* \
